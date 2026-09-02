@@ -1,0 +1,43 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Sudoku";
+}
+
+<div class="sudoku-app">
+
+    <div class="top-bar">
+        <button id="menuBtn">☰</button>
+
+        <div>
+            <h1>Sudoku</h1>
+            <div class="game-info">
+                <span>Time: <span id="timer">00:00</span></span>
+                <span>Mistakes: <span id="mistakes">0</span></span>
+            </div>
+        </div>
+
+        <button id="newGameBtn">New Game</button>
+    </div>
+
+    <div id="board"></div>
+
+    <div id="numbers">
+        <button class="number-btn">1</button>
+        <button class="number-btn">2</button>
+        <button class="number-btn">3</button>
+        <button class="number-btn">4</button>
+        <button class="number-btn">5</button>
+        <button class="number-btn">6</button>
+        <button class="number-btn">7</button>
+        <button class="number-btn">8</button>
+        <button class="number-btn">9</button>
+    </div>
+
+    <div class="controls">
+        <button id="undoBtn">Undo</button>
+        <button id="eraseBtn">Erase</button>
+        <button id="restartBtn">Restart</button>
+    </div>
+
+</div>
