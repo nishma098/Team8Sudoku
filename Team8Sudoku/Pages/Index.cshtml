@@ -1,43 +1,299 @@
 ﻿@page
-@model IndexModel
+
 @{
-    ViewData["Title"] = "Sudoku";
+    ViewData["Title"] = "Team 8 Sudoku";
 }
 
-<div class="sudoku-app">
+<div class="sudoku-page">
 
-    <div class="top-bar">
-        <button id="menuBtn">☰</button>
+    <main class="game-shell">
 
-        <div>
-            <h1>Sudoku</h1>
-            <div class="game-info">
-                <span>Time: <span id="timer">00:00</span></span>
-                <span>Mistakes: <span id="mistakes">0</span></span>
+        <header class="game-header">
+
+            <div>
+                <div class="brand-badge">
+                    TEAM 8
+                </div>
+
+                <h1>Sudoku</h1>
+
+                <p>
+                    Think smart. Have fun. Complete the grid.
+                </p>
             </div>
+
+            <div class="iteration-badge">
+                Iteration 1
+            </div>
+
+        </header>
+
+
+        <section class="game-stats">
+
+            <div class="stat-card">
+
+                <span class="stat-label">
+                    DIFFICULTY
+                </span>
+
+                <select id="difficulty">
+
+                    <option value="easy">
+                        Easy
+                    </option>
+
+                    <option value="medium" selected>
+                        Medium
+                    </option>
+
+                    <option value="hard">
+                        Hard
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span class="stat-label">
+                    LIVES
+                </span>
+
+                <div id="lives"
+                     class="lives">
+
+                    ❤️ ❤️ ❤️
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span class="stat-label">
+                    TIME
+                </span>
+
+                <div class="timer-row">
+
+                    <div id="timer"
+                         class="timer">
+                        00:00
+                    </div>
+
+                    <button type="button"
+                            id="pauseBtn"
+                            class="pause-btn">
+                        Pause
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="game-area">
+
+            <div class="board-card">
+
+                <div class="board-top">
+
+                    <span id="difficultyTitle">
+                        Medium Puzzle
+                    </span>
+
+                    <span id="statusText">
+                        Good luck! ✨
+                    </span>
+
+                </div>
+
+
+                <div class="progress-section">
+
+                    <div class="progress-info">
+
+                        <span>
+                            Progress
+                        </span>
+
+                        <span id="progressText">
+                            0 / 0
+                        </span>
+
+                    </div>
+
+                    <div class="progress-track">
+
+                        <div id="progressBar"
+                             class="progress-bar">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div id="sudoku-board"
+                     class="sudoku-board">
+                </div>
+
+            </div>
+
+
+            <aside class="control-panel">
+
+                <div class="panel-title">
+                    Pick a Number
+                </div>
+
+
+                <div class="number-buttons">
+
+                    <button type="button" data-number="1">1</button>
+                    <button type="button" data-number="2">2</button>
+                    <button type="button" data-number="3">3</button>
+
+                    <button type="button" data-number="4">4</button>
+                    <button type="button" data-number="5">5</button>
+                    <button type="button" data-number="6">6</button>
+
+                    <button type="button" data-number="7">7</button>
+                    <button type="button" data-number="8">8</button>
+                    <button type="button" data-number="9">9</button>
+
+                </div>
+
+
+                <div class="divider"></div>
+
+
+                <div class="control-buttons">
+
+                    <button type="button"
+                            id="undoBtn"
+                            class="action-btn">
+
+                        ↶
+
+                        <span>
+                            Undo
+                        </span>
+
+                    </button>
+
+
+                    <button type="button"
+                            id="eraseBtn"
+                            class="action-btn">
+
+                        ⌫
+
+                        <span>
+                            Erase
+                        </span>
+
+                    </button>
+
+                </div>
+
+
+                <button type="button"
+                        id="newGameBtn"
+                        class="new-game-btn">
+
+                    ✨ New Game
+
+                </button>
+
+
+                <div class="game-tip">
+
+                    <strong>
+                        How to Play
+                    </strong>
+
+                    <p>
+                        Select an empty square and choose a number.
+                        A wrong answer costs one heart.
+                    </p>
+
+                </div>
+
+            </aside>
+
+        </section>
+
+
+        <div class="team-footer">
+            Team 8 • CSE 3311 • Sudoku Project
         </div>
 
-        <button id="newGameBtn">New Game</button>
+    </main>
+
+</div>
+
+
+<div id="pauseOverlay"
+     class="overlay hidden">
+
+    <div class="popup-card">
+
+        <div class="popup-icon">
+            ⏸️
+        </div>
+
+        <h2>
+            Game Paused
+        </h2>
+
+        <p>
+            Take your time. Your timer is stopped.
+        </p>
+
+        <button type="button"
+                id="resumeBtn">
+
+            Resume Game
+
+        </button>
+
     </div>
 
-    <div id="board"></div>
+</div>
 
-    <div id="numbers">
-        <button class="number-btn">1</button>
-        <button class="number-btn">2</button>
-        <button class="number-btn">3</button>
-        <button class="number-btn">4</button>
-        <button class="number-btn">5</button>
-        <button class="number-btn">6</button>
-        <button class="number-btn">7</button>
-        <button class="number-btn">8</button>
-        <button class="number-btn">9</button>
-    </div>
 
-    <div class="controls">
-        <button id="undoBtn">Undo</button>
-        <button id="eraseBtn">Erase</button>
-        <button id="restartBtn">Restart</button>
+<div id="gameModal"
+     class="overlay hidden">
+
+    <div class="popup-card">
+
+        <div id="modalIcon"
+             class="popup-icon">
+            🎉
+        </div>
+
+        <h2 id="modalTitle">
+            Puzzle Complete!
+        </h2>
+
+        <p id="modalMessage">
+            Great job!
+        </p>
+
+        <button type="button"
+                id="modalNewGame">
+
+            Play Again
+
+        </button>
+
     </div>
 
 </div>

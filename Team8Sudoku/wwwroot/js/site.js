@@ -1,264 +1,1025 @@
-﻿const board = document.getElementById("board");
-
-let selectedCell = null;
-let history = [];
-let mistakes = 0;
-let seconds = 0;
-let timerInterval;
-let currentPuzzleIndex = 0;
-
-const games = [
-    {
-        puzzle: [
-            5, 3, 0, 0, 7, 0, 0, 0, 0,
-            6, 0, 0, 1, 9, 5, 0, 0, 0,
-            0, 9, 8, 0, 0, 0, 0, 6, 0,
-            8, 0, 0, 0, 6, 0, 0, 0, 3,
-            4, 0, 0, 8, 0, 3, 0, 0, 1,
-            7, 0, 0, 0, 2, 0, 0, 0, 6,
-            0, 6, 0, 0, 0, 0, 2, 8, 0,
-            0, 0, 0, 4, 1, 9, 0, 0, 5,
-            0, 0, 0, 0, 8, 0, 0, 7, 9
-        ],
-        solution: [
-            5, 3, 4, 6, 7, 8, 9, 1, 2,
-            6, 7, 2, 1, 9, 5, 3, 4, 8,
-            1, 9, 8, 3, 4, 2, 5, 6, 7,
-            8, 5, 9, 7, 6, 1, 4, 2, 3,
-            4, 2, 6, 8, 5, 3, 7, 9, 1,
-            7, 1, 3, 9, 2, 4, 8, 5, 6,
-            9, 6, 1, 5, 3, 7, 2, 8, 4,
-            2, 8, 7, 4, 1, 9, 6, 3, 5,
-            3, 4, 5, 2, 8, 6, 1, 7, 9
-        ]
-    },
-
-    {
-        puzzle: [
-            0, 0, 0, 2, 6, 0, 7, 0, 1,
-            6, 8, 0, 0, 7, 0, 0, 9, 0,
-            1, 9, 0, 0, 0, 4, 5, 0, 0,
-            8, 2, 0, 1, 0, 0, 0, 4, 0,
-            0, 0, 4, 6, 0, 2, 9, 0, 0,
-            0, 5, 0, 0, 0, 3, 0, 2, 8,
-            0, 0, 9, 3, 0, 0, 0, 7, 4,
-            0, 4, 0, 0, 5, 0, 0, 3, 6,
-            7, 0, 3, 0, 1, 8, 0, 0, 0
-        ],
-        solution: [
-            4, 3, 5, 2, 6, 9, 7, 8, 1,
-            6, 8, 2, 5, 7, 1, 4, 9, 3,
-            1, 9, 7, 8, 3, 4, 5, 6, 2,
-            8, 2, 6, 1, 9, 5, 3, 4, 7,
-            3, 7, 4, 6, 8, 2, 9, 1, 5,
-            9, 5, 1, 7, 4, 3, 6, 2, 8,
-            5, 1, 9, 3, 2, 6, 8, 7, 4,
-            2, 4, 8, 9, 5, 7, 1, 3, 6,
-            7, 6, 3, 4, 1, 8, 2, 5, 9
-        ]
-    },
-
-    {
-        puzzle: [
-            0, 2, 0, 6, 0, 8, 0, 0, 0,
-            5, 8, 0, 0, 0, 9, 7, 0, 0,
-            0, 0, 0, 0, 4, 0, 0, 0, 0,
-            3, 7, 0, 0, 0, 0, 5, 0, 0,
-            6, 0, 0, 0, 0, 0, 0, 0, 4,
-            0, 0, 8, 0, 0, 0, 0, 1, 3,
-            0, 0, 0, 0, 2, 0, 0, 0, 0,
-            0, 0, 9, 8, 0, 0, 0, 3, 6,
-            0, 0, 0, 3, 0, 6, 0, 9, 0
-        ],
-        solution: [
-            1, 2, 3, 6, 7, 8, 9, 4, 5,
-            5, 8, 4, 2, 3, 9, 7, 6, 1,
-            9, 6, 7, 1, 4, 5, 3, 2, 8,
-            3, 7, 2, 4, 6, 1, 5, 8, 9,
-            6, 9, 1, 5, 8, 3, 2, 7, 4,
-            4, 5, 8, 7, 9, 2, 6, 1, 3,
-            8, 3, 6, 9, 2, 4, 1, 5, 7,
-            2, 1, 9, 8, 5, 7, 4, 3, 6,
-            7, 4, 5, 3, 1, 6, 8, 9, 2
-        ]
-    }
+﻿const baseSolution = [
+    [5, 3, 4, 6, 7, 8, 9, 1, 2],
+    [6, 7, 2, 1, 9, 5, 3, 4, 8],
+    [1, 9, 8, 3, 4, 2, 5, 6, 7],
+    [8, 5, 9, 7, 6, 1, 4, 2, 3],
+    [4, 2, 6, 8, 5, 3, 7, 9, 1],
+    [7, 1, 3, 9, 2, 4, 8, 5, 6],
+    [9, 6, 1, 5, 3, 7, 2, 8, 4],
+    [2, 8, 7, 4, 1, 9, 6, 3, 5],
+    [3, 4, 5, 2, 8, 6, 1, 7, 9]
 ];
 
-function getCurrentGame() {
-    return games[currentPuzzleIndex];
-}
 
-function createBoard() {
-    board.innerHTML = "";
+const puzzles = {
 
-    const currentGame = getCurrentGame();
+    easy: [
+        [5, 3, 0, 6, 7, 0, 9, 0, 2],
+        [6, 0, 2, 1, 9, 5, 0, 4, 8],
+        [0, 9, 8, 3, 0, 2, 5, 6, 0],
 
-    for (let i = 0; i < 81; i++) {
-        const cell = document.createElement("div");
+        [8, 5, 0, 7, 6, 1, 0, 2, 3],
+        [4, 0, 6, 8, 0, 3, 7, 0, 1],
+        [7, 1, 0, 9, 2, 4, 0, 5, 6],
 
-        cell.classList.add("cell");
-        cell.dataset.index = i;
+        [0, 6, 1, 5, 0, 7, 2, 8, 0],
+        [2, 8, 0, 4, 1, 9, 6, 0, 5],
+        [3, 0, 5, 0, 8, 6, 1, 7, 9]
+    ],
 
-        if (currentGame.puzzle[i] !== 0) {
-            cell.textContent = currentGame.puzzle[i];
-            cell.classList.add("fixed");
-        }
 
-        cell.addEventListener("click", function () {
-            if (cell.classList.contains("fixed")) {
-                return;
-            }
+    medium: [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
 
-            if (selectedCell) {
-                selectedCell.classList.remove("selected");
-            }
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
 
-            selectedCell = cell;
-            cell.classList.add("selected");
-        });
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9]
+    ],
 
-        board.appendChild(cell);
-    }
-}
 
-const numberButtons = document.querySelectorAll(".number-btn");
+    hard: [
+        [5, 0, 0, 0, 7, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 5, 0, 0, 0],
+        [0, 9, 0, 0, 0, 0, 0, 6, 0],
 
-numberButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-        if (!selectedCell) {
-            return;
-        }
+        [8, 0, 0, 0, 0, 0, 0, 0, 3],
+        [0, 0, 0, 8, 0, 3, 0, 0, 0],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
 
-        const currentGame = getCurrentGame();
-        const index = Number(selectedCell.dataset.index);
-        const value = Number(button.textContent);
+        [0, 6, 0, 0, 0, 0, 2, 0, 0],
+        [0, 0, 0, 4, 0, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 0]
+    ]
+};
 
-        history.push({
-            cell: selectedCell,
-            oldValue: selectedCell.textContent,
-            wasWrong: selectedCell.classList.contains("wrong")
-        });
 
-        selectedCell.textContent = value;
+const board =
+    document.getElementById("sudoku-board");
 
-        if (value !== currentGame.solution[index]) {
-            selectedCell.classList.add("wrong");
-            mistakes++;
-            document.getElementById("mistakes").textContent = mistakes;
-        } else {
-            selectedCell.classList.remove("wrong");
-        }
+const difficulty =
+    document.getElementById("difficulty");
 
-        checkCompletion();
-    });
-});
+const difficultyTitle =
+    document.getElementById("difficultyTitle");
 
-document.getElementById("eraseBtn").addEventListener("click", function () {
-    if (!selectedCell) {
-        return;
-    }
+const statusText =
+    document.getElementById("statusText");
 
-    history.push({
-        cell: selectedCell,
-        oldValue: selectedCell.textContent,
-        wasWrong: selectedCell.classList.contains("wrong")
-    });
+const livesDisplay =
+    document.getElementById("lives");
 
-    selectedCell.textContent = "";
-    selectedCell.classList.remove("wrong");
-});
+const timerDisplay =
+    document.getElementById("timer");
 
-document.getElementById("undoBtn").addEventListener("click", function () {
-    if (history.length === 0) {
-        return;
-    }
+const progressText =
+    document.getElementById("progressText");
 
-    const lastMove = history.pop();
+const progressBar =
+    document.getElementById("progressBar");
 
-    if (selectedCell) {
-        selectedCell.classList.remove("selected");
-    }
+const pauseButton =
+    document.getElementById("pauseBtn");
 
-    selectedCell = lastMove.cell;
-    selectedCell.textContent = lastMove.oldValue;
+const pauseOverlay =
+    document.getElementById("pauseOverlay");
 
-    if (lastMove.wasWrong) {
-        selectedCell.classList.add("wrong");
-    } else {
-        selectedCell.classList.remove("wrong");
-    }
+const resumeButton =
+    document.getElementById("resumeBtn");
 
-    selectedCell.classList.add("selected");
-});
+const undoButton =
+    document.getElementById("undoBtn");
 
-document.getElementById("restartBtn").addEventListener("click", function () {
-    resetCurrentGame();
-});
+const eraseButton =
+    document.getElementById("eraseBtn");
 
-document.getElementById("newGameBtn").addEventListener("click", function () {
-    currentPuzzleIndex++;
+const newGameButton =
+    document.getElementById("newGameBtn");
 
-    if (currentPuzzleIndex >= games.length) {
-        currentPuzzleIndex = 0;
-    }
+const numberButtons =
+    document.querySelectorAll(
+        ".number-buttons button"
+    );
 
-    resetCurrentGame();
-});
+const gameModal =
+    document.getElementById("gameModal");
 
-document.getElementById("menuBtn").addEventListener("click", function () {
-    alert("Team 8 Sudoku");
-});
+const modalIcon =
+    document.getElementById("modalIcon");
 
-function startTimer() {
-    clearInterval(timerInterval);
+const modalTitle =
+    document.getElementById("modalTitle");
 
-    seconds = 0;
-    document.getElementById("timer").textContent = "00:00";
+const modalMessage =
+    document.getElementById("modalMessage");
 
-    timerInterval = setInterval(function () {
-        seconds++;
+const modalNewGame =
+    document.getElementById("modalNewGame");
 
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
 
-        const formattedMinutes = String(minutes).padStart(2, "0");
-        const formattedSeconds = String(remainingSeconds).padStart(2, "0");
+let currentPuzzle = [];
 
-        document.getElementById("timer").textContent =
-            formattedMinutes + ":" + formattedSeconds;
+let selectedCell = null;
 
-    }, 1000);
-}
+let lives = 3;
 
-function resetCurrentGame() {
-    selectedCell = null;
-    history = [];
-    mistakes = 0;
+let history = [];
 
-    document.getElementById("mistakes").textContent = "0";
+let seconds = 0;
 
-    createBoard();
-    startTimer();
-}
+let timer = null;
 
-function checkCompletion() {
-    const currentGame = getCurrentGame();
-    const cells = document.querySelectorAll(".cell");
+let paused = false;
 
-    for (let i = 0; i < cells.length; i++) {
-        if (Number(cells[i].textContent) !== currentGame.solution[i]) {
-            return;
-        }
-    }
+let gameOver = false;
 
-    clearInterval(timerInterval);
+let totalEmpty = 0;
 
-    alert(
-        "Congratulations! You completed the Sudoku puzzle in " +
-        document.getElementById("timer").textContent +
-        "!"
+let completed = 0;
+
+
+function clonePuzzle(puzzle) {
+
+    return puzzle.map(
+        row => [...row]
     );
 }
 
-createBoard();
-startTimer();
+
+function startGame() {
+
+    gameOver = false;
+    paused = false;
+
+    selectedCell = null;
+
+    lives = 3;
+
+    history = [];
+
+    seconds = 0;
+
+    completed = 0;
+
+    pauseOverlay.classList.add(
+        "hidden"
+    );
+
+    gameModal.classList.add(
+        "hidden"
+    );
+
+    pauseButton.textContent =
+        "Pause";
+
+
+    const level =
+        difficulty.value;
+
+
+    document.body.className =
+        `difficulty-${level}`;
+
+
+    currentPuzzle =
+        clonePuzzle(
+            puzzles[level]
+        );
+
+
+    totalEmpty =
+        currentPuzzle
+            .flat()
+            .filter(
+                value => value === 0
+            )
+            .length;
+
+
+    difficultyTitle.textContent =
+        capitalize(level)
+        +
+        " Puzzle";
+
+
+    if (level === "easy") {
+
+        statusText.textContent =
+            "Relax and have fun! 🌿";
+
+    }
+
+    else if (level === "hard") {
+
+        statusText.textContent =
+            "Challenge accepted! 🔥";
+
+    }
+
+    else {
+
+        statusText.textContent =
+            "You've got this! ✨";
+    }
+
+
+    updateLives();
+
+    updateProgress();
+
+    resetTimer();
+
+    drawBoard();
+}
+
+
+function drawBoard() {
+
+    board.innerHTML = "";
+
+
+    currentPuzzle.forEach(
+        (row, rowIndex) => {
+
+            row.forEach(
+                (value, colIndex) => {
+
+                    const cell =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    cell.classList.add(
+                        "sudoku-cell"
+                    );
+
+
+                    cell.dataset.row =
+                        rowIndex;
+
+                    cell.dataset.col =
+                        colIndex;
+
+
+                    if (value !== 0) {
+
+                        cell.textContent =
+                            value;
+
+                        cell.classList.add(
+                            "fixed-cell"
+                        );
+
+                    }
+
+                    else {
+
+                        cell.classList.add(
+                            "editable-cell"
+                        );
+
+
+                        cell.addEventListener(
+                            "click",
+                            () => selectCell(cell)
+                        );
+                    }
+
+
+                    board.appendChild(
+                        cell
+                    );
+                }
+            );
+        }
+    );
+}
+
+
+function selectCell(cell) {
+
+    if (
+        paused
+        ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    clearHighlights();
+
+
+    selectedCell =
+        cell;
+
+
+    cell.classList.add(
+        "selected-cell"
+    );
+
+
+    const selectedRow =
+        Number(
+            cell.dataset.row
+        );
+
+    const selectedCol =
+        Number(
+            cell.dataset.col
+        );
+
+
+    document
+        .querySelectorAll(
+            ".sudoku-cell"
+        )
+        .forEach(other => {
+
+            const row =
+                Number(
+                    other.dataset.row
+                );
+
+            const col =
+                Number(
+                    other.dataset.col
+                );
+
+
+            const sameRow =
+                row === selectedRow;
+
+
+            const sameColumn =
+                col === selectedCol;
+
+
+            const sameBox =
+                Math.floor(
+                    row / 3
+                )
+                ===
+                Math.floor(
+                    selectedRow / 3
+                )
+                &&
+                Math.floor(
+                    col / 3
+                )
+                ===
+                Math.floor(
+                    selectedCol / 3
+                );
+
+
+            if (
+                other !== cell
+                &&
+                (
+                    sameRow
+                    ||
+                    sameColumn
+                    ||
+                    sameBox
+                )
+            ) {
+
+                other.classList.add(
+                    "related-cell"
+                );
+            }
+        });
+}
+
+
+function clearHighlights() {
+
+    document
+        .querySelectorAll(
+            ".sudoku-cell"
+        )
+        .forEach(cell => {
+
+            cell.classList.remove(
+                "selected-cell"
+            );
+
+            cell.classList.remove(
+                "related-cell"
+            );
+        });
+}
+
+
+function enterNumber(number) {
+
+    if (
+        !selectedCell
+        ||
+        paused
+        ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    const row =
+        Number(
+            selectedCell.dataset.row
+        );
+
+    const col =
+        Number(
+            selectedCell.dataset.col
+        );
+
+
+    if (
+        number
+        ===
+        baseSolution[row][col]
+    ) {
+
+        if (
+            selectedCell.textContent
+            === ""
+        ) {
+
+            history.push({
+                cell:
+                    selectedCell,
+
+                value:
+                    ""
+            });
+
+
+            completed++;
+        }
+
+
+        selectedCell.textContent =
+            number;
+
+
+        selectedCell.classList.add(
+            "user-number"
+        );
+
+
+        selectedCell.classList.add(
+            "correct-pop"
+        );
+
+
+        statusText.textContent =
+            positiveMessage();
+
+
+        updateProgress();
+
+
+        const cell =
+            selectedCell;
+
+
+        setTimeout(
+            () => {
+
+                cell.classList.remove(
+                    "correct-pop"
+                );
+
+            },
+            350
+        );
+
+
+        if (
+            completed
+            ===
+            totalEmpty
+        ) {
+
+            finishGame();
+        }
+    }
+
+    else {
+
+        lives--;
+
+
+        updateLives();
+
+
+        selectedCell.classList.add(
+            "wrong-cell"
+        );
+
+
+        statusText.textContent =
+            "Oops! Try another number.";
+
+
+        const cell =
+            selectedCell;
+
+
+        setTimeout(
+            () => {
+
+                cell.classList.remove(
+                    "wrong-cell"
+                );
+
+            },
+            450
+        );
+
+
+        if (
+            lives <= 0
+        ) {
+
+            loseGame();
+        }
+    }
+}
+
+
+numberButtons.forEach(
+    button => {
+
+        button.addEventListener(
+            "click",
+            () => {
+
+                enterNumber(
+                    Number(
+                        button.dataset.number
+                    )
+                );
+            }
+        );
+    }
+);
+
+
+function eraseCell() {
+
+    if (
+        !selectedCell
+        ||
+        paused
+        ||
+        gameOver
+    ) {
+        return;
+    }
+
+
+    if (
+        selectedCell.textContent
+        !== ""
+    ) {
+
+        history.push({
+            cell:
+                selectedCell,
+
+            value:
+                selectedCell.textContent
+        });
+
+
+        selectedCell.textContent =
+            "";
+
+
+        selectedCell.classList.remove(
+            "user-number"
+        );
+
+
+        completed =
+            Math.max(
+                0,
+                completed - 1
+            );
+
+
+        updateProgress();
+
+
+        statusText.textContent =
+            "Cell cleared";
+    }
+}
+
+
+function undoMove() {
+
+    if (
+        history.length === 0
+        ||
+        paused
+        ||
+        gameOver
+    ) {
+
+        statusText.textContent =
+            "Nothing to undo";
+
+        return;
+    }
+
+
+    const move =
+        history.pop();
+
+
+    const current =
+        move.cell.textContent;
+
+
+    move.cell.textContent =
+        move.value;
+
+
+    if (
+        current !== ""
+        &&
+        move.value === ""
+    ) {
+
+        completed =
+            Math.max(
+                0,
+                completed - 1
+            );
+    }
+
+
+    if (
+        move.value === ""
+    ) {
+
+        move.cell.classList.remove(
+            "user-number"
+        );
+
+    }
+
+    else {
+
+        move.cell.classList.add(
+            "user-number"
+        );
+    }
+
+
+    updateProgress();
+
+
+    statusText.textContent =
+        "Move undone";
+}
+
+
+eraseButton.addEventListener(
+    "click",
+    eraseCell
+);
+
+
+undoButton.addEventListener(
+    "click",
+    undoMove
+);
+
+
+function updateLives() {
+
+    livesDisplay.innerHTML =
+        "";
+
+
+    for (
+        let i = 0;
+        i < 3;
+        i++
+    ) {
+
+        const heart =
+            document.createElement(
+                "span"
+            );
+
+
+        if (
+            i < lives
+        ) {
+
+            heart.textContent =
+                "❤️";
+
+        }
+
+        else {
+
+            heart.textContent =
+                "💔";
+
+            heart.classList.add(
+                "lost-heart"
+            );
+        }
+
+
+        livesDisplay.appendChild(
+            heart
+        );
+    }
+}
+
+
+function updateProgress() {
+
+    progressText.textContent =
+        `${completed} / ${totalEmpty}`;
+
+
+    let percentage = 0;
+
+
+    if (
+        totalEmpty > 0
+    ) {
+
+        percentage =
+            completed
+            /
+            totalEmpty
+            *
+            100;
+    }
+
+
+    progressBar.style.width =
+        `${percentage}%`;
+}
+
+
+function resetTimer() {
+
+    clearInterval(
+        timer
+    );
+
+
+    seconds = 0;
+
+
+    updateTimer();
+
+
+    timer =
+        setInterval(
+            () => {
+
+                if (
+                    !paused
+                    &&
+                    !gameOver
+                ) {
+
+                    seconds++;
+
+                    updateTimer();
+                }
+
+            },
+            1000
+        );
+}
+
+
+function updateTimer() {
+
+    const minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+
+    const remaining =
+        seconds % 60;
+
+
+    timerDisplay.textContent =
+        String(minutes)
+            .padStart(
+                2,
+                "0"
+            )
+        +
+        ":"
+        +
+        String(remaining)
+            .padStart(
+                2,
+                "0"
+            );
+}
+
+
+function pauseGame() {
+
+    if (
+        gameOver
+    ) {
+        return;
+    }
+
+
+    paused =
+        true;
+
+
+    pauseOverlay.classList.remove(
+        "hidden"
+    );
+
+
+    pauseButton.textContent =
+        "Resume";
+}
+
+
+function resumeGame() {
+
+    paused =
+        false;
+
+
+    pauseOverlay.classList.add(
+        "hidden"
+    );
+
+
+    pauseButton.textContent =
+        "Pause";
+}
+
+
+pauseButton.addEventListener(
+    "click",
+    () => {
+
+        if (paused) {
+
+            resumeGame();
+
+        }
+
+        else {
+
+            pauseGame();
+        }
+    }
+);
+
+
+resumeButton.addEventListener(
+    "click",
+    resumeGame
+);
+
+
+function finishGame() {
+
+    gameOver =
+        true;
+
+
+    clearInterval(
+        timer
+    );
+
+
+    statusText.textContent =
+        "Puzzle complete! 🏆";
+
+
+    showModal(
+        "🏆",
+        "Amazing!",
+        `You completed the puzzle in ${timerDisplay.textContent}.`
+    );
+}
+
+
+function loseGame() {
+
+    gameOver =
+        true;
+
+
+    clearInterval(
+        timer
+    );
+
+
+    showModal(
+        "💔",
+        "Game Over",
+        "You used all three lives. Try again!"
+    );
+}
+
+
+function showModal(
+    icon,
+    title,
+    message
+) {
+
+    modalIcon.textContent =
+        icon;
+
+
+    modalTitle.textContent =
+        title;
+
+
+    modalMessage.textContent =
+        message;
+
+
+    gameModal.classList.remove(
+        "hidden"
+    );
+}
+
+
+function positiveMessage() {
+
+    const messages = [
+        "Nice! ✨",
+        "Great move! 🌟",
+        "Perfect! 🎯",
+        "Keep going! 🚀",
+        "Awesome! 💜"
+    ];
+
+
+    return messages[
+        Math.floor(
+            Math.random()
+            *
+            messages.length
+        )
+    ];
+}
+
+
+function capitalize(word) {
+
+    return (
+        word
+            .charAt(0)
+            .toUpperCase()
+        +
+        word.slice(1)
+    );
+}
+
+
+newGameButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+modalNewGame.addEventListener(
+    "click",
+    startGame
+);
+
+
+difficulty.addEventListener(
+    "change",
+    startGame
+);
+
+
+startGame();
