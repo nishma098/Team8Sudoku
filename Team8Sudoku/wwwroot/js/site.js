@@ -31,6 +31,11 @@ const baseSolution = [
 ];
 
 
+const gameShell =
+    document.querySelector(
+        ".game-shell"
+    );
+
 
 /* =========================================================
    DOM ELEMENTS
@@ -47,6 +52,10 @@ const difficulty =
         "difficulty"
     );
 
+const difficultyDisplay =
+    document.getElementById(
+        "difficultyDisplay"
+    );
 
 const themeSelect =
     document.getElementById(
@@ -162,15 +171,21 @@ const tutorialOverlay =
     );
 
 
-const startGameButton =
+const closeTutorialButton =
     document.getElementById(
-        "startGameBtn"
+        "closeTutorialBtn"
     );
 
 
 const newGameButton =
     document.getElementById(
         "newGameBtn"
+    );
+
+
+const startGameButton =
+    document.getElementById(
+        "startGameBtn"
     );
 
 
@@ -240,6 +255,12 @@ const summaryBestTime =
     );
 
 
+const startupScreen =
+    document.getElementById(
+        "startupScreen"
+    );
+
+
 
 /* =========================================================
    GAME STATE
@@ -273,6 +294,7 @@ let completed = 0;
 
 let tutorialOpen = true;
 
+let gameStarted = false;
 
 
 /* =========================================================
@@ -849,6 +871,7 @@ function startGame() {
         difficulty.value;
 
 
+        difficultyDisplay.textContent = difficulty.options[difficulty.selectedIndex].text;
 
     /* Create new randomized solution */
 
@@ -935,6 +958,8 @@ function startGame() {
     resetTimer();
 
     drawBoard();
+
+    showBoard(); // Shows all of the board and surrounding elements. Un-hides the whole element
 
 }
 
@@ -2355,6 +2380,18 @@ function closeTutorial() {
 }
 
 
+/* =========================================================
+   Board Toggle
+   ========================================================= */
+
+function hideBoard() {
+    gameShell.classList.add("hidden");
+}
+
+function showBoard() {
+    gameShell.classList.remove("hidden");
+}
+
 
 helpButton.addEventListener(
 
@@ -2366,7 +2403,7 @@ helpButton.addEventListener(
 
 
 
-startGameButton.addEventListener(
+closeTutorialButton.addEventListener(
 
     "click",
 
@@ -2563,9 +2600,14 @@ newGameButton.addEventListener(
 
     "click",
 
-    startGame
-
+    openStartupScreen
 );
+
+startGameButton.addEventListener("click", () => {
+    closeStartupScreen();
+    startGame();
+});
+    
 
 
 
@@ -2576,17 +2618,31 @@ modalNewGame.addEventListener(
     startGame
 
 );
+/* =========================================================
+   STARTUP SCREEN
+   ========================================================= */
 
+function openStartupScreen() 
+{
+    startupScreen.classList.remove("hidden");
+}
 
+function closeStartupScreen() 
+{
+    startupScreen.classList.add("hidden");
+}
 
-difficulty.addEventListener(
+async function start()
+{
+    openTutorial();
 
-    "change",
+    // Wait until the tutorial is closed
+    while (tutorialOpen) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+    }
 
-    startGame
-
-);
-
+    openStartupScreen();
+}
 
 
 /* =========================================================
@@ -2594,5 +2650,4 @@ difficulty.addEventListener(
    ========================================================= */
 
 loadTheme();
-
-startGame();
+start();
