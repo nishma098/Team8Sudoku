@@ -1,0 +1,153 @@
+﻿@page
+@{
+    ViewData["Title"] = "Team 8 Card Games";
+}
+
+<link rel="stylesheet" href="~/css/solitaire.css" asp-append-version="true" />
+
+<div id="cardGameApp" class="card-game-app theme-sakura">
+
+    <header class="cg-header">
+        <a asp-page="/Index" class="cg-back">← Game Hub</a>
+        <div class="cg-heading">
+            <h1>🃏 Team 8 Card Games</h1>
+            <p>Play, customize, and challenge yourself!</p>
+        </div>
+        <div class="cg-stats">
+            <span>⏱ <b id="solTimer">00:00</b></span>
+            <span>⭐ <b id="solScore">0</b> points</span>
+            <span>↗ <b id="solMoves">0</b> moves</span>
+        </div>
+    </header>
+
+    <div class="cg-layout">
+
+        <aside class="cg-sidebar">
+            <section class="cg-panel">
+                <h2>🎮 Card Games</h2>
+
+                <button type="button" class="cg-game active">
+                    ♠ Classic Solitaire
+                    <small>Playing now</small>
+                </button>
+
+                <button type="button" class="cg-game upcoming" disabled>
+                    ♥ FreeCell
+                    <small>Coming Soon</small>
+                </button>
+
+                <button type="button" class="cg-game upcoming" disabled>
+                    ♣ Spider Solitaire
+                    <small>Coming Soon</small>
+                </button>
+            </section>
+
+            <section class="cg-panel">
+                <h2>⚙️ Game Settings</h2>
+
+                <label for="solDrawMode">Draw Mode</label>
+                <select id="solDrawMode">
+                    <option value="1">Draw 1 Card</option>
+                    <option value="3">Draw 3 Cards</option>
+                </select>
+
+                <label for="solTheme">Background Theme</label>
+                <select id="solTheme">
+                    <option value="sakura">🌸 Sakura Purple</option>
+                    <option value="green">🌿 Classic Green</option>
+                    <option value="midnight">🌙 Midnight Blue</option>
+                </select>
+
+                <label for="solCardBack">Card Back Design</label>
+                <select id="solCardBack">
+                    <option value="purple">💜 Purple</option>
+                    <option value="pink">🌸 Pink</option>
+                    <option value="blue">💙 Blue</option>
+                    <option value="classic">♠ Classic</option>
+                </select>
+
+                <p class="cg-setting-note">
+                    Your appearance settings are saved automatically.
+                    Changing Draw Mode starts a new game.
+                </p>
+            </section>
+        </aside>
+
+        <main class="cg-main">
+
+            <div class="cg-toolbar">
+                <button type="button" id="solNew">🔄 New Game</button>
+                <button type="button" id="solUndo">↶ Undo</button>
+                <button type="button" id="solHint">💡 Hint</button>
+                <button type="button" id="solHelp">❔ How to Play</button>
+            </div>
+
+            <div id="solMessage" class="cg-message"
+                 role="status" aria-live="polite">
+                Welcome! Select or drag a card.
+            </div>
+
+            <div class="cg-board-scroll">
+                <div class="cg-board">
+
+                    <div class="cg-top-row">
+                        <div class="cg-draw-area">
+                            <div id="solStock" class="sol-slot"
+                                 aria-label="Draw pile"></div>
+                            <div id="solWaste" class="sol-slot"
+                                 aria-label="Waste pile"></div>
+                        </div>
+
+                        <div class="cg-foundations">
+                            <div class="sol-slot"
+                                 data-foundation="0"></div>
+                            <div class="sol-slot"
+                                 data-foundation="1"></div>
+                            <div class="sol-slot"
+                                 data-foundation="2"></div>
+                            <div class="sol-slot"
+                                 data-foundation="3"></div>
+                        </div>
+                    </div>
+
+                    <div id="solTableau" class="sol-tableau"></div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<div id="solOverlay" class="sol-overlay">
+    <div class="sol-dialog">
+        <div class="sol-dialog-icon">🃏</div>
+        <h2 id="solDialogTitle">How to Play Solitaire</h2>
+
+        <div id="solDialogText">
+            <p>
+                Build four foundations from Ace to King,
+                keeping each suit together.
+            </p>
+            <p>
+                In the seven columns, stack cards in descending
+                order with alternating red and black colors.
+            </p>
+            <p>Only Kings can move into empty columns.</p>
+            <p>
+                Click or drag cards to move them. Use Hint
+                when you need help.
+            </p>
+            <p>Move all 52 cards to the foundations to win!</p>
+        </div>
+
+        <button type="button" id="solDialogButton">
+            Let's Play!
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/solitaire.js" asp-append-version="true"></script>
+}
+

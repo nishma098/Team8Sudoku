@@ -1,640 +1,162 @@
-@page
+﻿@page
 @{
-    ViewData["Title"] = "Team 8 Sudoku";
+    ViewData["Title"] = "Team 8 Game Hub";
 }
 
-<div class="sudoku-page">
+<style>
+    .hub {
+        min-height: 90vh;
+        padding: 60px 20px;
+        text-align: center;
+        background: linear-gradient( 135deg, #bda6ee, #f5d5f0, #d6c2fa );
+        font-family: 'Segoe UI', sans-serif;
+        color: #482075;
+        border-radius: 20px;
+    }
+
+        .hub h1 {
+            font-size: 44px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+    .hub-subtitle {
+        font-size: 19px;
+        margin-bottom: 45px;
+    }
+
+    .game-cards {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .game-card {
+        width: 300px;
+        padding: 35px 25px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 25px;
+        box-shadow: 0 12px 30px rgba(76, 35, 125, 0.2);
+        transition: transform 0.2s;
+    }
+
+        .game-card:hover {
+            transform: translateY(-6px);
+        }
+
+    .game-icon {
+        font-size: 75px;
+        margin-bottom: 15px;
+    }
+
+    .game-card h2 {
+        font-size: 27px;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .game-card p {
+        min-height: 75px;
+        color: #79658f;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .play-button {
+        display: inline-block;
+        margin-top: 15px;
+        padding: 13px 35px;
+        background: linear-gradient( 135deg, #a34ee8, #6927b4 );
+        color: white;
+        border-radius: 15px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: background 0.2s, transform 0.2s;
+    }
+
+        .play-button:hover {
+            color: white;
+            background: #5b1f9b;
+            transform: translateY(-2px);
+        }
+
+    .hub-footer {
+        margin-top: 55px;
+        color: #6e4b92;
+        font-size: 14px;
+    }
+
+    @@media (max-width: 650px) {
+        .hub {
+            padding: 35px 15px;
+        }
+
+            .hub h1 {
+                font-size: 32px;
+            }
+
+        .hub-subtitle {
+            font-size: 16px;
+        }
+
+        .game-card {
+            width: 100%;
+            max-width: 350px;
+        }
+    }
+</style>
 
-    <main class="game-shell">
+<div class="hub">
 
-        <!-- HEADER -->
-        <header class="game-header">
+    <h1>🎮 Team 8 Game Hub</h1>
 
-            <div>
-                <div class="brand-badge">
-                    TEAM 8
-                </div>
+    <p class="hub-subtitle">
+        Choose your favorite game and start playing!
+    </p>
 
-                <h1>Sudoku</h1>
+    <div class="game-cards">
 
-                <p>
-                    Think smart. Have fun. Complete the grid.
-                </p>
-            </div>
+        <!-- SUDOKU GAME -->
+        <div class="game-card">
 
-            <div class="iteration-badge">
-                Iteration 2
-            </div>
+            <div class="game-icon">🌸🧩</div>
 
-        </header>
+            <h2>Sudoku</h2>
 
+            <p>
+                Challenge yourself with different board sizes,
+                difficulties, levels, and rewards!
+            </p>
 
-        <!-- TOP GAME INFORMATION -->
-        <section class="game-stats">
-
-            <!-- Difficulty -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    DIFFICULTY
-                </span>
-
-                <select id="difficulty">
-
-                    <option value="easy">
-                        Easy
-                    </option>
-
-                    <option value="medium" selected>
-                        Medium
-                    </option>
-
-                    <option value="hard">
-                        Hard
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Theme -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    THEME
-                </span>
-
-                <select id="themeSelect">
-
-                    <option value="purple">
-                        Purple
-                    </option>
-
-                    <option value="blue">
-                        Blue
-                    </option>
-
-                    <option value="green">
-                        Green
-                    </option>
-
-                    <option value="pink">
-                        Pink
-                    </option>
-
-                    <option value="dark">
-                        Dark
-                    </option>
-
-                </select>
-
-            </div>
-
-
-            <!-- Lives -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    LIVES
-                </span>
-
-                <div id="lives"
-                     class="lives">
-
-                    ❤️ ❤️ ❤️
-
-                </div>
-
-            </div>
-
-
-            <!-- Mistakes -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    MISTAKES
-                </span>
-
-                <div id="mistakes"
-                     class="mistakes">
-
-                    0 / 3
-
-                </div>
-
-            </div>
-
-
-            <!-- Timer -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    TIME
-                </span>
-
-                <div class="timer-row">
-
-                    <div id="timer"
-                         class="timer">
-
-                        00:00
-
-                    </div>
-
-                    <button type="button"
-                            id="pauseBtn"
-                            class="pause-btn">
-
-                        Pause
-
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- Best Time -->
-            <div class="stat-card">
-
-                <span class="stat-label">
-                    BEST TIME
-                </span>
-
-                <div id="bestTime"
-                     class="best-time">
-
-                    --:--
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- MAIN GAME AREA -->
-        <section class="game-area">
-
-
-            <!-- BOARD SIDE -->
-            <div class="board-card">
-
-                <div class="board-top">
-
-                    <span id="difficultyTitle">
-                        Medium Puzzle
-                    </span>
-
-                    <span id="statusText">
-                        Good luck! ✨
-                    </span>
-
-                </div>
-
-
-                <!-- Progress -->
-                <div class="progress-section">
-
-                    <div class="progress-info">
-
-                        <span>
-                            Progress
-                        </span>
-
-                        <span id="progressText">
-                            0 / 0
-                        </span>
-
-                    </div>
-
-
-                    <div class="progress-track">
-
-                        <div id="progressBar"
-                             class="progress-bar">
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <!-- Sudoku Board -->
-                <div id="sudoku-board"
-                     class="sudoku-board">
-                </div>
-
-            </div>
-
-
-            <!-- CONTROLS -->
-            <aside class="control-panel">
-
-                <div class="panel-title">
-                    Pick a Number
-                </div>
-
-
-                <!-- Number Buttons -->
-                <div class="number-buttons">
-
-                    <button type="button"
-                            data-number="1">
-                        1
-                    </button>
-
-                    <button type="button"
-                            data-number="2">
-                        2
-                    </button>
-
-                    <button type="button"
-                            data-number="3">
-                        3
-                    </button>
-
-                    <button type="button"
-                            data-number="4">
-                        4
-                    </button>
-
-                    <button type="button"
-                            data-number="5">
-                        5
-                    </button>
-
-                    <button type="button"
-                            data-number="6">
-                        6
-                    </button>
-
-                    <button type="button"
-                            data-number="7">
-                        7
-                    </button>
-
-                    <button type="button"
-                            data-number="8">
-                        8
-                    </button>
-
-                    <button type="button"
-                            data-number="9">
-                        9
-                    </button>
-
-                </div>
-
-
-                <div class="divider"></div>
-
-
-                <!-- Action Buttons -->
-                <div class="control-buttons">
-
-
-                    <!-- Undo -->
-                    <button type="button"
-                            id="undoBtn"
-                            class="action-btn">
-
-                        ↶
-
-                        <span>
-                            Undo
-                        </span>
-
-                    </button>
-
-
-                    <!-- Erase -->
-                    <button type="button"
-                            id="eraseBtn"
-                            class="action-btn">
-
-                        ⌫
-
-                        <span>
-                            Erase
-                        </span>
-
-                    </button>
-
-
-                    <!-- Hint -->
-                    <button type="button"
-                            id="hintBtn"
-                            class="action-btn hint-btn">
-
-                        💡
-
-                        <span>
-                            Hint
-                        </span>
-
-                    </button>
-
-
-                    <!-- Tutorial -->
-                    <button type="button"
-                            id="helpBtn"
-                            class="action-btn">
-
-                        ?
-
-                        <span>
-                            How to Play
-                        </span>
-
-                    </button>
-
-                </div>
-
-
-                <!-- Hint Counter -->
-                <div class="hint-counter">
-
-                    Hints Used:
-
-                    <strong id="hintsUsed">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <!-- Practice Mode -->
-                <label class="practice-toggle">
-
-                    <input type="checkbox"
-                           id="practiceMode" />
-
-                    <span>
-                        Practice Mode
-                        <br />
-                        Infinite Lives
-                    </span>
-
-                </label>
-
-
-                <!-- New Game -->
-                <button type="button"
-                        id="newGameBtn"
-                        class="new-game-btn">
-
-                    ✨ New Game
-
-                </button>
-
-
-                <!-- Small Help -->
-                <div class="game-tip">
-
-                    <strong>
-                        Quick Tip
-                    </strong>
-
-                    <p>
-                        Select an empty square and choose a number.
-                        Try to finish with fewer mistakes and hints
-                        to beat your best time.
-                    </p>
-
-                </div>
-
-            </aside>
-
-        </section>
-
-
-        <!-- FOOTER -->
-        <div class="team-footer">
-
-            Team 8 • CSE 3311 • Sudoku Project
+            <a class="play-button" asp-page="/Sudoku">
+                Play Sudoku
+            </a>
 
         </div>
 
-    </main>
+        <!-- SOLITAIRE GAME -->
+        <div class="game-card">
 
-</div>
+            <div class="game-icon">🃏</div>
 
+            <h2>Solitaire</h2>
 
+            <p>
+                Enjoy a classic card game with strategy,
+                challenges, and fun!
+            </p>
 
-<!-- =====================================
-     HOW TO PLAY / TUTORIAL
-     ===================================== -->
+            <a class="play-button" asp-page="/Solitaire">
+                Play Solitaire
+            </a>
 
-<div id="tutorialOverlay"
-     class="overlay">
-
-    <div class="popup-card tutorial-card">
-
-        <div class="popup-icon">
-            🧩
         </div>
-
-        <h2>
-            How to Play Sudoku
-        </h2>
-
-        <p>
-            Fill the grid using numbers 1 through 9.
-        </p>
-
-        <p>
-            Every row, column, and 3×3 box must contain
-            each number only once.
-        </p>
-
-        <p>
-            Select an empty square and choose a number
-            from the number pad.
-        </p>
-
-        <p>
-            ❤️ You normally have 3 lives.
-            A wrong answer removes one heart.
-        </p>
-
-        <p>
-            💡 Use Hint if you need help.
-        </p>
-
-        <p>
-            ♾️ Practice Mode gives unlimited lives,
-            but your mistakes are still counted.
-        </p>
-
-        <p>
-            ↶ Undo reverses your last move,
-            and Erase clears a number.
-        </p>
-
-        <p>
-            🎨 You can choose your own color theme.
-        </p>
-
-        <p>
-            🏆 When you finish, you will see your time,
-            mistakes, hints used, and best time.
-        </p>
-
-
-        <button type="button"
-                id="startGameBtn">
-
-            Start Game
-
-        </button>
 
     </div>
 
-</div>
-
-
-
-<!-- =====================================
-     PAUSE
-     ===================================== -->
-
-<div id="pauseOverlay"
-     class="overlay hidden">
-
-    <div class="popup-card">
-
-        <div class="popup-icon">
-            ⏸️
-        </div>
-
-        <h2>
-            Game Paused
-        </h2>
-
-        <p>
-            Your timer is stopped.
-        </p>
-
-        <button type="button"
-                id="resumeBtn">
-
-            Resume Game
-
-        </button>
-
-    </div>
-
-</div>
-
-
-
-<!-- =====================================
-     GAME SUMMARY / GAME OVER
-     ===================================== -->
-
-<div id="gameModal"
-     class="overlay hidden">
-
-    <div class="popup-card summary-card">
-
-        <div id="modalIcon"
-             class="popup-icon">
-
-            🏆
-
-        </div>
-
-
-        <h2 id="modalTitle">
-            Puzzle Complete!
-        </h2>
-
-
-        <p id="modalMessage">
-            Great job!
-        </p>
-
-
-        <div class="game-summary">
-
-
-            <div class="summary-row">
-
-                <span>
-                    Difficulty
-                </span>
-
-                <strong id="summaryDifficulty">
-                    Medium
-                </strong>
-
-            </div>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Time
-                </span>
-
-                <strong id="summaryTime">
-                    00:00
-                </strong>
-
-            </div>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Mistakes
-                </span>
-
-                <strong id="summaryMistakes">
-                    0
-                </strong>
-
-            </div>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Hints Used
-                </span>
-
-                <strong id="summaryHints">
-                    0
-                </strong>
-
-            </div>
-
-
-            <div class="summary-row">
-
-                <span>
-                    Best Time
-                </span>
-
-                <strong id="summaryBestTime">
-                    --:--
-                </strong>
-
-            </div>
-
-
-        </div>
-
-
-        <button type="button"
-                id="modalNewGame">
-
-            Play Again
-
-        </button>
-
+    <div class="hub-footer">
+        🌸 Team 8 Game Hub | Sudoku & Solitaire
     </div>
 
 </div>
