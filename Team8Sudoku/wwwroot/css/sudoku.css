@@ -1,0 +1,438 @@
+﻿
+/* ==========================================
+   TEAM 8 SUDOKU - SAKURA DESIGN
+   ========================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.sakura-app {
+    --accent: #8b45cb;
+    --accent-dark: #5d278e;
+    --soft: #f5eaff;
+    --text: #482075;
+    --border: #d7bdf2;
+    min-height: 100vh;
+    padding: 24px;
+    color: var(--text);
+    background: linear-gradient(135deg, #f8e5f6, #e9d8ff, #f6e9ff);
+    position: relative;
+    overflow: hidden;
+}
+
+    .sakura-app.theme-lavender {
+        --accent: #7460d8;
+        --accent-dark: #4936a6;
+        --soft: #efedff;
+        --text: #39306d;
+        --border: #c6c0fa;
+        background: linear-gradient(135deg, #dcd5ff, #f4eaff, #e0ddff);
+    }
+
+    .sakura-app.theme-night {
+        --accent: #8e83ff;
+        --accent-dark: #5548c0;
+        --soft: #282848;
+        --text: #f2efff;
+        --border: #55547b;
+        background: linear-gradient(135deg, #16172f, #29254b, #443467);
+    }
+
+.sakura-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+    padding: 20px 28px;
+    margin-bottom: 24px;
+    background: rgba(255,255,255,0.88);
+    border-radius: 22px;
+    box-shadow: 0 8px 24px rgba(91, 43, 145, 0.12);
+}
+
+.logo {
+    font-size: 29px;
+    font-weight: 800;
+}
+
+.header-stats,
+.header-actions,
+.choice-row,
+.game-actions,
+.level-navigation {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+    .header-stats span {
+        padding: 10px 14px;
+        background: #f3e9ff;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
+button,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.sakura-app button,
+.dialog-card button {
+    border: 1px solid var(--border, #d7bdf2);
+    background: white;
+    color: #60358b;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: transform .15s, background .15s;
+}
+
+    .sakura-app button:hover,
+    .dialog-card button:hover {
+        transform: translateY(-2px);
+        background: #f1e4ff;
+    }
+
+    .sakura-app button.active,
+    .sakura-app button.primary,
+    .dialog-card button.primary {
+        background: linear-gradient(135deg, #b45de5, #7633b9);
+        color: white;
+        border-color: transparent;
+    }
+
+.header-actions a {
+    display: inline-block;
+    color: #7034a9;
+    font-weight: 700;
+    text-decoration: none;
+    padding: 10px;
+}
+
+.game-layout {
+    display: grid;
+    grid-template-columns: 250px minmax(300px, 1fr) 260px;
+    gap: 22px;
+    align-items: start;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+.panel,
+.board-panel {
+    padding: 22px;
+    background: rgba(255,255,255,0.91);
+    border-radius: 22px;
+    box-shadow: 0 8px 25px rgba(92, 43, 144, 0.12);
+}
+
+    .panel h2 {
+        margin: 0 0 18px;
+        font-size: 21px;
+        color: #653293;
+    }
+
+.setting-group {
+    margin-bottom: 24px;
+}
+
+    .setting-group h3 {
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+.choice-row {
+    gap: 7px;
+}
+
+    .choice-row button {
+        padding: 9px 11px;
+        font-size: 13px;
+    }
+
+#themeSelect {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d9c2ed;
+    border-radius: 12px;
+    background: white;
+    color: #563080;
+}
+
+.status {
+    padding: 13px;
+    background: #f4e8ff;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.board-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.board-panel {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+}
+
+.sudoku-board {
+    display: grid;
+    width: min(100%, 540px);
+    aspect-ratio: 1;
+    border: 3px solid #653293;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+    .sudoku-board > * {
+        min-width: 0;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        background: #fff;
+        border: 1px solid #e0d4eb;
+        color: #4b2c70;
+        font-weight: 700;
+        font-size: clamp(11px, 2vw, 23px);
+        cursor: pointer;
+    }
+
+    .sudoku-board .given,
+    .sudoku-board .fixed {
+        background: #eee0fa;
+        color: #47216c;
+    }
+
+    .sudoku-board .selected {
+        background: #cba5f5 !important;
+    }
+
+    .sudoku-board .highlight {
+        background: #f1e4ff;
+    }
+
+    .sudoku-board .wrong,
+    .sudoku-board .error {
+        background: #ffd6df !important;
+        color: #bd2855;
+    }
+
+    .sudoku-board .correct {
+        color: #2b9867;
+    }
+
+.number-pad {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    max-width: 600px;
+}
+
+    .number-pad button {
+        min-width: 43px;
+        min-height: 43px;
+        font-size: 17px;
+        border-radius: 12px;
+    }
+
+.game-actions {
+    justify-content: center;
+}
+
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.muted {
+    color: #8c78a0;
+    font-size: 13px;
+}
+
+.level-list {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 7px;
+    margin: 15px 0;
+}
+
+    .level-list button {
+        padding: 10px 3px;
+        font-size: 13px;
+    }
+
+        .level-list button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+.level-navigation {
+    justify-content: space-between;
+    gap: 6px;
+}
+
+    .level-navigation button {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+.progress-track {
+    height: 13px;
+    background: #eadcf7;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 12px 0;
+}
+
+#progressFill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #d183ed, #8540cb);
+    border-radius: inherit;
+    transition: width .3s;
+}
+
+.total-points {
+    font-size: 35px;
+    font-weight: 800;
+    color: #8e3cc7;
+}
+
+.flower {
+    position: absolute;
+    font-size: 35px;
+    opacity: .25;
+    pointer-events: none;
+}
+
+.flower-one {
+    top: 18%;
+    left: 2%;
+}
+
+.flower-two {
+    right: 3%;
+    top: 48%;
+}
+
+.flower-three {
+    left: 7%;
+    bottom: 4%;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: rgba(35, 17, 58, .65);
+}
+
+    .overlay.hidden {
+        display: none;
+    }
+
+.dialog-card {
+    width: min(100%, 480px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 32px;
+    border-radius: 25px;
+    background: #fff;
+    color: #4e2774;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.dialog-icon {
+    font-size: 55px;
+}
+
+.dialog-card h2 {
+    font-size: 28px;
+}
+
+.dialog-card p {
+    line-height: 1.6;
+}
+
+.dialog-card button {
+    margin-top: 12px;
+    padding: 13px 30px;
+}
+
+@media (max-width: 1150px) {
+    .game-layout {
+        grid-template-columns: 220px minmax(300px, 1fr);
+    }
+
+    .right-column {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .sakura-app {
+        padding: 12px;
+    }
+
+    .sakura-header {
+        padding: 16px;
+    }
+
+    .game-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .right-column {
+        grid-column: auto;
+        grid-template-columns: 1fr;
+    }
+
+    .panel,
+    .board-panel {
+        padding: 14px;
+    }
+
+    .sudoku-board {
+        width: 100%;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    .header-stats {
+        font-size: 12px;
+    }
+}
