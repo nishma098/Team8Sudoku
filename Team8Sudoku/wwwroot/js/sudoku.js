@@ -1,823 +1,968 @@
-﻿
-"use strict";
-
-// ========================================
-// TEAM 8 SUDOKU - GAME ENGINE
-// ========================================
 
 (() => {
-    const $ = id => document.getElementById(id);
+    "use strict";
 
+    const $ = id => document.getElementById(id);
     const TOTAL_LEVELS = 50;
-    const STORAGE_KEY = "team8-sudoku-progress-v1";
+    const STORAGE = "sudoku-calendar-v1";
     const SYMBOLS = "123456789ABCDEFG";
 
-    const state = {
-        size: 9,
-        difficulty: "medium",
-        mode: "levels",
-        level: 1,
-        levelPage: 0,
-        theme: "sakura",
-        solution: [],
-        puzzle: [],
-        board: [],
-        selected: -1,
-        points: 0,
-        lives: 3,
-        mistakes: 0,
-        hints: 3,
-        seconds: 0,
-        history: [],
-        completed: {},
-        totalPoints: 0,
-        paused: false,
-        started: false,
-        finished: false,
-        timerHandle: null
-    };
+    if (!$("sudoku-board")) return;
 
-    function progressKey() {
-        return `${state.size}-${state.difficulty}`;
-    }
-
-    function loadProgress() {
+    function loadSaved() {
         try {
-            const saved = JSON.parse(
-                localStorage.getItem(STORAGE_KEY) || "{}"
-            );
-
-            state.completed = saved.completed || {};
-            state.totalPoints = saved.totalPoints || 0;
-            state.theme = saved.theme || "sakura";
+            return {
+                points: 0,
+                bestTime: null,
+                completedLevels: {},
+                dailyCompleted: {},
+                dailyProgress: {},
+                victories: 0,
+                theme: "sakura",
+                ...JSON.parse(localStorage.getItem(STORAGE) || "{}")
+            };
         } catch {
-            state.completed = {};
-            state.totalPoints = 0;
+            return {
+                points: 0, bestTime: null,
+                completedLevels: {}, dailyCompleted: {},
+                dailyProgress: {}, victories: 0,
+                theme: "sakura"
+            };
         }
     }
 
-    function saveProgress() {
+    let saved = loadSaved();
+    let size = 9, difficulty = "medium", mode = "levels";
+    let level = 1, levelPage = 0;
+    let solution = [], puzzle = [], board = [], fixed = [];
+    let selected = -1, lives = 3, mistakes = 0, hints = 3;
+    let seconds = 0, paused = false, finished = false;
+    let history = [], currentDaily = null;
+    let timerInterval = null, wrongTimeout = null, gameToken = 0;
+    let calendarDate = new Date(), selectedDate = "";
+
+    function save() {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                completed: state.completed,
-                totalPoints: state.totalPoints,
-                theme: state.theme
-            }));
-        } catch {
-            // Game still works if browser storage is unavailable.
+            localStorage.setItem(STORAGE, JSON.stringify(saved));
+        } catch { }
+    }
+
+    function setText(id, value) {
+        if ($(id)) $(id).textContent = value;
+    }
+
+    function status(message) {
+        setText("gameStatus", message);
+    }
+
+    function dateKey(date) {
+        return [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, "0"),
+            String(date.getDate()).padStart(2, "0")
+        ].join("-");
+    }
+
+    function formatTime(value) {
+        return String(Math.floor(value / 60)).padStart(2, "0")
+            + ":" + String(value % 60).padStart(2, "0");
+    }
+
+    function hashString(value) {
+        let hash = 2166136261;
+        for (const ch of value) {
+            hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619);
         }
+        return hash >>> 0;
     }
 
-    function completedLevels() {
-        return state.completed[progressKey()] || [];
+    function seededRandom(seed) {
+        let state = seed >>> 0;
+        return () => {
+            state += 0x6D2B79F5;
+            let t = state;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
     }
 
-    function isUnlocked(level) {
-        if (level === 1) return true;
-        return completedLevels().includes(level - 1);
-    }
-
-    function shuffle(values) {
-        const result = [...values];
-
+    function shuffle(array, random) {
+        const result = [...array];
         for (let i = result.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
+            const j = Math.floor(random() * (i + 1));
             [result[i], result[j]] = [result[j], result[i]];
         }
-
         return result;
     }
 
-    function makeSolution(size) {
-        const box = Math.sqrt(size);
-
-        const groups = shuffle(
-            Array.from({ length: box }, (_, i) => i)
+    function generateSolution(n, random) {
+        const root = Math.sqrt(n);
+        const groups = Array.from({ length: root }, (_, i) => i);
+        const rows = shuffle(groups, random).flatMap(g =>
+            shuffle(groups, random).map(i => g * root + i)
         );
-
-        const rows = groups.flatMap(group =>
-            shuffle(
-                Array.from(
-                    { length: box },
-                    (_, i) => group * box + i
-                )
-            )
+        const cols = shuffle(groups, random).flatMap(g =>
+            shuffle(groups, random).map(i => g * root + i)
         );
-
-        const columnGroups = shuffle(
-            Array.from({ length: box }, (_, i) => i)
+        const digits = shuffle(
+            Array.from({ length: n }, (_, i) => i + 1), random
         );
-
-        const columns = columnGroups.flatMap(group =>
-            shuffle(
-                Array.from(
-                    { length: box },
-                    (_, i) => group * box + i
-                )
-            )
+        const pattern = (r, c) =>
+            (root * (r % root) + Math.floor(r / root) + c) % n;
+        return rows.flatMap(r =>
+            cols.map(c => digits[pattern(r, c)])
         );
+    }
 
-        const numbers = shuffle(
-            Array.from({ length: size }, (_, i) => i + 1)
-        );
+    function countSolutions(grid, n, limit = 2) {
+        const root = Math.sqrt(n);
+        const rows = Array(n).fill(0);
+        const cols = Array(n).fill(0);
+        const boxes = Array(n).fill(0);
+        const all = (1 << n) - 1;
 
-        const solution = [];
+        for (let i = 0; i < grid.length; i++) {
+            if (!grid[i]) continue;
+            const r = Math.floor(i / n), c = i % n;
+            const b = Math.floor(r / root) * root + Math.floor(c / root);
+            const bit = 1 << (grid[i] - 1);
+            if ((rows[r] | cols[c] | boxes[b]) & bit) return 0;
+            rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+        }
 
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c < size; c++) {
-                const pattern =
-                    (box * (rows[r] % box) +
-                        Math.floor(rows[r] / box) +
-                        columns[c]) % size;
+        let solutions = 0;
 
-                solution.push(numbers[pattern]);
+        function search() {
+            if (solutions >= limit) return;
+            let best = -1, bestMask = 0, bestCount = n + 1;
+
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i]) continue;
+                const r = Math.floor(i / n), c = i % n;
+                const b = Math.floor(r / root) * root + Math.floor(c / root);
+                const mask = all & ~(rows[r] | cols[c] | boxes[b]);
+                let count = 0;
+                for (let bits = mask; bits; bits &= bits - 1) count++;
+                if (!count) return;
+                if (count < bestCount) {
+                    best = i; bestMask = mask; bestCount = count;
+                    if (count === 1) break;
+                }
+            }
+
+            if (best === -1) {
+                solutions++;
+                return;
+            }
+
+            const r = Math.floor(best / n), c = best % n;
+            const b = Math.floor(r / root) * root + Math.floor(c / root);
+
+            for (let bits = bestMask; bits; bits &= bits - 1) {
+                const bit = bits & -bits;
+                const value = 32 - Math.clz32(bit);
+                grid[best] = value;
+                rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+                search();
+                grid[best] = 0;
+                rows[r] ^= bit; cols[c] ^= bit; boxes[b] ^= bit;
+                if (solutions >= limit) return;
             }
         }
 
-        return solution;
+        search();
+        return solutions;
     }
 
-    function makePuzzle(solution) {
-        const size = state.size;
-        const total = size * size;
-
-        const ratios = {
-            easy: 0.42,
-            medium: 0.55,
-            hard: 0.65
-        };
-
-        const ratio = ratios[state.difficulty];
-        const removeCount = Math.floor(total * ratio);
-
-        const puzzle = [...solution];
-
-        const positions = shuffle(
-            Array.from({ length: total }, (_, i) => i)
+    function generatePuzzle(n, diff, seed) {
+        const random = seededRandom(seed);
+        const solved = generateSolution(n, random);
+        const grid = [...solved];
+        const ratio = { easy: .38, medium: .50, hard: .58 }[diff];
+        const target = Math.floor(n * n * ratio);
+        const indices = shuffle(
+            Array.from({ length: n * n }, (_, i) => i), random
         );
+        let removed = 0;
 
-        for (let i = 0; i < removeCount; i++) {
-            puzzle[positions[i]] = 0;
+        for (const index of indices) {
+            if (removed >= target) break;
+            const previous = grid[index];
+            grid[index] = 0;
+            if (n <= 9 && countSolutions([...grid], n) !== 1) {
+                grid[index] = previous;
+            } else {
+                removed++;
+            }
         }
 
-        return puzzle;
+        return { solution: solved, puzzle: grid };
     }
 
-    function displayValue(number) {
-        return number === 0 ? "" : SYMBOLS[number - 1];
-    }
-
-    function formatTime(seconds) {
-        const minutes = Math.floor(seconds / 60);
-        const remaining = seconds % 60;
-
-        return String(minutes).padStart(2, "0") +
-            ":" +
-            String(remaining).padStart(2, "0");
-    }
-
-    function message(text) {
-        $("gameStatus").textContent = text;
+    function symbol(value) {
+        return value ? SYMBOLS[value - 1] : "";
     }
 
     function updateStats() {
-        $("points").textContent = state.points;
-        $("lives").textContent =
-            state.mode === "practice" ? "∞" : state.lives;
-
-        $("timer").textContent = formatTime(state.seconds);
-        $("hintsLeft").textContent = state.hints;
-        $("totalPoints").textContent =
-            `${state.totalPoints} ✦`;
-
-        $("mistakesText").textContent =
-            `Mistakes: ${state.mistakes}`;
+        setText("points", saved.points);
+        setText("totalPoints", saved.points + " ✦");
+        setText("lives", mode === "practice" && !currentDaily ? "∞" : lives);
+        setText("timer", formatTime(seconds));
+        setText("hintsLeft", hints);
+        setText("bestTime",
+            saved.bestTime === null ? "--:--" : formatTime(saved.bestTime)
+        );
     }
 
-    function setTheme(theme) {
-        state.theme = theme;
-
-        const app = document.querySelector(".sakura-app");
-
-        app.classList.remove(
-            "theme-sakura",
-            "theme-lavender",
-            "theme-night"
-        );
-
-        app.classList.add(`theme-${theme}`);
-
-        $("themeSelect").value = theme;
-
-        saveProgress();
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (paused || finished) return;
+            seconds++;
+            setText("timer", formatTime(seconds));
+            if (currentDaily) saveDailyProgress();
+        }, 1000);
     }
 
     function updateChoices() {
-        document.querySelectorAll("[data-size]").forEach(button => {
-            button.classList.toggle(
-                "active",
-                Number(button.dataset.size) === state.size
-            );
+        document.querySelectorAll("[data-size]").forEach(b =>
+            b.classList.toggle("active", Number(b.dataset.size) === size)
+        );
+        document.querySelectorAll("[data-difficulty]").forEach(b =>
+            b.classList.toggle("active", b.dataset.difficulty === difficulty)
+        );
+        document.querySelectorAll("[data-mode]").forEach(b =>
+            b.classList.toggle("active", b.dataset.mode === mode)
+        );
+    }
+
+    // Clicking a cell ONLY selects it.
+    // It does not change numbers or start a new game.
+    function selectCell(index) {
+        if (paused || finished) return;
+        if (index < 0 || index >= board.length) return;
+
+        selected = index;
+
+        const cells = $("sudoku-board").querySelectorAll(".sudoku-cell");
+        cells.forEach((cell, i) => {
+            cell.classList.toggle("selected", i === index);
         });
 
-        document.querySelectorAll("[data-difficulty]").forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.difficulty === state.difficulty
-            );
-        });
-
-        document.querySelectorAll("[data-mode]").forEach(button => {
-            button.classList.toggle(
-                "active",
-                button.dataset.mode === state.mode
-            );
-        });
+        status(fixed[index]
+            ? "This number cannot be changed."
+            : "Choose a number from the number pad."
+        );
     }
 
     function renderBoard() {
         const container = $("sudoku-board");
-        const size = state.size;
-        const box = Math.sqrt(size);
-
-        container.innerHTML = "";
+        container.replaceChildren();
         container.style.gridTemplateColumns =
             `repeat(${size}, minmax(0, 1fr))`;
         container.style.gridTemplateRows =
             `repeat(${size}, minmax(0, 1fr))`;
+        container.classList.toggle("size-16", size === 16);
+        const root = Math.sqrt(size);
 
-        for (let i = 0; i < size * size; i++) {
-            const row = Math.floor(i / size);
-            const col = i % size;
-
+        for (let i = 0; i < board.length; i++) {
             const cell = document.createElement("button");
-
             cell.type = "button";
             cell.className = "sudoku-cell";
-            cell.textContent = displayValue(state.board[i]);
-
+            cell.dataset.index = i;
+            cell.textContent = symbol(board[i]);
             cell.setAttribute("role", "gridcell");
-            cell.setAttribute(
-                "aria-label",
-                `Row ${row + 1}, column ${col + 1}, ` +
-                (state.board[i]
-                    ? displayValue(state.board[i])
-                    : "empty")
+            cell.setAttribute("aria-label",
+                `Row ${Math.floor(i / size) + 1}, column ${i % size + 1}`
             );
 
-            if (state.puzzle[i] !== 0) {
-                cell.classList.add("given");
-            }
+            if (fixed[i]) cell.classList.add("given");
+            if (selected === i) cell.classList.add("selected");
 
-            if (state.selected === i) {
-                cell.classList.add("selected");
-            }
+            const r = Math.floor(i / size), c = i % size;
+            if ((c + 1) % root === 0 && c !== size - 1)
+                cell.style.borderRight = "2px solid #693699";
+            if ((r + 1) % root === 0 && r !== size - 1)
+                cell.style.borderBottom = "2px solid #693699";
 
-            if (col % box === box - 1 && col !== size - 1) {
-                cell.style.borderRight =
-                    "3px solid #653293";
-            }
-
-            if (row % box === box - 1 && row !== size - 1) {
-                cell.style.borderBottom =
-                    "3px solid #653293";
-            }
-
-            cell.addEventListener("click", () => {
-                if (!canPlay()) return;
-
-                state.selected = i;
-                renderBoard();
+            cell.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                selectCell(i);
             });
 
             container.appendChild(cell);
         }
     }
 
-    function renderNumberPad() {
+    function renderPad() {
         const pad = $("numberPad");
+        pad.replaceChildren();
+        pad.classList.toggle("size-16", size === 16);
 
-        pad.innerHTML = "";
-
-        for (let number = 1; number <= state.size; number++) {
+        for (let n = 1; n <= size; n++) {
             const button = document.createElement("button");
-
             button.type = "button";
-            button.textContent = displayValue(number);
-
-            button.addEventListener("click", () => {
-                enterNumber(number);
+            button.textContent = symbol(n);
+            button.addEventListener("click", event => {
+                event.preventDefault();
+                event.stopPropagation();
+                enterNumber(n);
             });
-
             pad.appendChild(button);
         }
     }
 
-    function renderLevels() {
-        const list = $("levelList");
-        const completed = completedLevels();
+    function flashWrong(index, number) {
+        const cell = $("sudoku-board").children[index];
+        if (!cell) return;
 
-        list.innerHTML = "";
+        const token = gameToken;
+        cell.textContent = symbol(number);
+        cell.classList.add("wrong");
+        clearTimeout(wrongTimeout);
 
-        const start = state.levelPage * 10 + 1;
-        const end = Math.min(start + 9, TOTAL_LEVELS);
-
-        $("levelRange").textContent =
-            `Levels ${start}–${end}`;
-
-        $("levelPage").textContent =
-            `${state.levelPage + 1} / 5`;
-
-        for (let level = start; level <= end; level++) {
-            const button = document.createElement("button");
-
-            button.type = "button";
-            button.textContent =
-                completed.includes(level)
-                    ? `✓ ${level}`
-                    : isUnlocked(level)
-                        ? `${level}`
-                        : `🔒 ${level}`;
-
-            button.disabled =
-                state.mode === "practice" ||
-                !isUnlocked(level);
-
-            if (level === state.level &&
-                state.mode === "levels") {
-                button.classList.add("active");
-            }
-
-            button.addEventListener("click", () => {
-                state.level = level;
-                newGame();
-            });
-
-            list.appendChild(button);
-        }
-
-        $("previousLevels").disabled =
-            state.levelPage === 0;
-
-        $("nextLevels").disabled =
-            state.levelPage === 4;
-
-        $("progressLabel").textContent =
-            state.mode === "practice"
-                ? "Practice Mode"
-                : `Level ${state.level} of ${TOTAL_LEVELS}`;
-
-        $("levelProgress").textContent =
-            `${completed.length} / ${TOTAL_LEVELS} levels completed`;
-
-        updateCellProgress();
-    }
-
-    function updateCellProgress() {
-        const emptyCount =
-            state.puzzle.filter(value => value === 0).length;
-
-        let completedCount = 0;
-
-        for (let i = 0; i < state.board.length; i++) {
-            if (state.puzzle[i] === 0 &&
-                state.board[i] === state.solution[i]) {
-                completedCount++;
-            }
-        }
-
-        $("cellProgress").textContent =
-            `${completedCount} / ${emptyCount} cells completed`;
-
-        $("progressFill").style.width =
-            emptyCount === 0
-                ? "100%"
-                : `${(completedCount / emptyCount) * 100}%`;
-    }
-
-    function stopTimer() {
-        if (state.timerHandle !== null) {
-            clearInterval(state.timerHandle);
-            state.timerHandle = null;
-        }
-    }
-
-    function startTimer() {
-        stopTimer();
-
-        state.timerHandle = setInterval(() => {
-            if (state.started &&
-                !state.paused &&
-                !state.finished) {
-                state.seconds++;
-                updateStats();
-            }
-        }, 1000);
-    }
-
-    function canPlay() {
-        return state.started &&
-            !state.paused &&
-            !state.finished;
-    }
-
-    function snapshot() {
-        state.history.push({
-            board: [...state.board],
-            points: state.points,
-            lives: state.lives,
-            mistakes: state.mistakes,
-            hints: state.hints
-        });
-
-        if (state.history.length > 100) {
-            state.history.shift();
-        }
+        wrongTimeout = setTimeout(() => {
+            if (token !== gameToken) return;
+            cell.classList.remove("wrong");
+            cell.textContent = symbol(board[index]);
+        }, 650);
     }
 
     function enterNumber(number) {
-        if (!canPlay()) return;
-
-        const index = state.selected;
-
-        if (index < 0) {
-            message("Select an empty square first.");
+        if (paused || finished) return;
+        if (selected < 0) {
+            status("Select an empty square first.");
             return;
         }
-
-        if (state.puzzle[index] !== 0) {
-            message("This number cannot be changed.");
+        if (fixed[selected]) {
+            status("This is a fixed number.");
             return;
         }
+        if (board[selected] === number) return;
 
-        if (state.board[index] === number) return;
+        if (number !== solution[selected]) {
+            mistakes++;
+            flashWrong(selected, number);
 
-        snapshot();
+            if (mode !== "practice" || currentDaily)
+                lives = Math.max(0, lives - 1);
 
-        if (number === state.solution[index]) {
-            state.board[index] = number;
-            state.points += 10;
-            state.totalPoints += 10;
-
-            message("✨ Correct! +10 points");
-        } else {
-            state.mistakes++;
-
-            if (state.mode === "levels") {
-                state.lives--;
-            }
-
-            message(
-                state.mode === "practice"
-                    ? "Not quite! Try again."
-                    : "Incorrect! You lost one life."
-            );
-
-            if (state.lives <= 0 &&
-                state.mode === "levels") {
-                renderBoard();
-                updateStats();
-                finishGame(false);
-                return;
-            }
-        }
-
-        saveProgress();
-        renderBoard();
-        updateStats();
-        updateCellProgress();
-        checkWin();
-    }
-
-    function eraseSelected() {
-        if (!canPlay()) return;
-
-        const index = state.selected;
-
-        if (index < 0 ||
-            state.puzzle[index] !== 0 ||
-            state.board[index] === 0) {
-            message("Select a number you entered to erase.");
-            return;
-        }
-
-        snapshot();
-
-        state.board[index] = 0;
-
-        renderBoard();
-        updateCellProgress();
-
-        message("Number erased.");
-    }
-
-    function undoMove() {
-        if (!canPlay()) return;
-
-        if (state.history.length === 0) {
-            message("Nothing to undo.");
-            return;
-        }
-
-        const previous = state.history.pop();
-
-        // Total points earned remain saved.
-        state.board = previous.board;
-        state.points = previous.points;
-        state.lives = previous.lives;
-        state.mistakes = previous.mistakes;
-        state.hints = previous.hints;
-
-        renderBoard();
-        updateStats();
-        updateCellProgress();
-
-        message("Last move undone.");
-    }
-
-    function useHint() {
-        if (!canPlay()) return;
-
-        if (state.hints <= 0) {
-            message("You have no hints remaining.");
-            return;
-        }
-
-        let index = state.selected;
-
-        if (index < 0 ||
-            state.puzzle[index] !== 0 ||
-            state.board[index] === state.solution[index]) {
-            index = state.board.findIndex(
-                (value, i) =>
-                    state.puzzle[i] === 0 &&
-                    value !== state.solution[i]
-            );
-        }
-
-        if (index === -1) return;
-
-        snapshot();
-
-        state.selected = index;
-        state.board[index] = state.solution[index];
-        state.hints--;
-
-        renderBoard();
-        updateStats();
-        updateCellProgress();
-
-        message("💡 Hint used! One square completed.");
-
-        checkWin();
-    }
-
-    function checkWin() {
-        const won = state.board.every(
-            (value, i) => value === state.solution[i]
-        );
-
-        if (won) finishGame(true);
-    }
-
-    function showResult(title, text, icon) {
-        $("resultTitle").textContent = title;
-        $("resultMessage").textContent = text;
-        $("resultIcon").textContent = icon;
-
-        $("resultOverlay").classList.remove("hidden");
-    }
-
-    function finishGame(won) {
-        state.finished = true;
-        stopTimer();
-
-        if (won) {
-            const bonus =
-                Math.max(50, 300 - state.seconds);
-
-            state.points += bonus;
-            state.totalPoints += bonus;
-
-            if (state.mode === "levels") {
-                const completed = completedLevels();
-
-                if (!completed.includes(state.level)) {
-                    completed.push(state.level);
-                    completed.sort((a, b) => a - b);
-
-                    state.completed[progressKey()] = completed;
-                }
-            }
-
-            saveProgress();
+            status("❌ Wrong number! Try again.");
             updateStats();
-            renderLevels();
+            updateProgress();
+            saveDailyProgress();
 
-            showResult(
-                "Puzzle Complete!",
-                `Amazing! You earned ${state.points} points ` +
-                `and finished in ${formatTime(state.seconds)}.`,
-                "🏆"
-            );
-        } else {
-            showResult(
-                "Game Over",
-                "You ran out of lives. Try again!",
-                "💔"
-            );
+            if (lives === 0) {
+                const token = gameToken;
+                setTimeout(() => {
+                    if (token === gameToken && !finished)
+                        finishGame(false);
+                }, 700);
+            }
+            return;
+        }
+
+        history.push({ index: selected, previous: board[selected] });
+        board[selected] = number;
+        saved.points += 10;
+
+        clearTimeout(wrongTimeout);
+        renderBoard();
+        updateStats();
+        updateProgress();
+        saveDailyProgress();
+        save();
+
+        status("✅ Correct!");
+
+        if (board.every((v, i) => v === solution[i]))
+            finishGame(true);
+    }
+
+    function updateProgress() {
+        const empty = puzzle.filter(v => v === 0).length;
+        const filled = board.reduce((sum, v, i) =>
+            sum + (puzzle[i] === 0 && v !== 0 ? 1 : 0), 0
+        );
+        if ($("progressFill"))
+            $("progressFill").style.width =
+                (empty ? filled / empty * 100 : 100) + "%";
+
+        setText("cellProgress", `${filled} / ${empty} cells completed`);
+        setText("mistakesText", `Mistakes: ${mistakes}`);
+
+        const completed = Object.values(saved.completedLevels)
+            .filter(Boolean).length;
+        setText("levelProgress", `${completed} levels completed`);
+        setText("progressLabel", currentDaily
+            ? `Daily Challenge: ${currentDaily}`
+            : mode === "practice"
+                ? "Practice Mode"
+                : `Level ${level} of ${TOTAL_LEVELS}`
+        );
+    }
+
+    function levelKey(n) {
+        return `${size}-${difficulty}-${n}`;
+    }
+
+    function highestUnlocked() {
+        for (let i = 1; i <= TOTAL_LEVELS; i++) {
+            if (!saved.completedLevels[levelKey(i)]) return i;
+        }
+        return TOTAL_LEVELS;
+    }
+
+    function renderLevels() {
+        const list = $("levelList");
+        if (!list) return;
+        list.replaceChildren();
+
+        const start = levelPage * 10 + 1;
+        const end = Math.min(start + 9, TOTAL_LEVELS);
+        setText("levelRange", `Levels ${start}–${end}`);
+        setText("levelPage", `${levelPage + 1} / 5`);
+
+        const highest = highestUnlocked();
+
+        for (let n = start; n <= end; n++) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = n;
+            if (saved.completedLevels[levelKey(n)])
+                button.classList.add("completed");
+            if (n === level && !currentDaily)
+                button.classList.add("active");
+            button.disabled = n > highest;
+
+            button.addEventListener("click", () => {
+                level = n;
+                mode = "levels";
+                currentDaily = null;
+                updateChoices();
+                newGame();
+            });
+            list.appendChild(button);
+        }
+
+        $("previousLevels").disabled = levelPage === 0;
+        $("nextLevels").disabled = levelPage === 4;
+    }
+
+    function renderAchievements() {
+        const list = $("achievementList");
+        if (!list) return;
+        list.replaceChildren();
+
+        const completed = Object.values(saved.completedLevels)
+            .filter(Boolean).length;
+
+        const achievements = [
+            ["🏆", "First Victory", saved.victories >= 1],
+            ["🏅", "10 Levels", completed >= 10],
+            ["⭐", "1,000 Points", saved.points >= 1000],
+            ["📅", "Daily Champion",
+                Object.values(saved.dailyCompleted).some(Boolean)]
+        ];
+
+        for (const [icon, label, unlocked] of achievements) {
+            const card = document.createElement("div");
+            card.className = "achievement-item";
+            if (!unlocked) card.classList.add("locked");
+
+            const iconEl = document.createElement("span");
+            iconEl.className = "achievement-icon";
+            iconEl.textContent = unlocked ? icon : "🔒";
+
+            const name = document.createElement("strong");
+            name.textContent = label;
+            card.append(iconEl, name);
+
+            if (label === "Daily Champion") {
+                card.style.cursor = "pointer";
+                card.addEventListener("click", openCalendar);
+            }
+
+            list.appendChild(card);
         }
     }
 
-    function updateTutorial() {
-        const size = state.size;
-        const box = Math.sqrt(size);
-
-        $("tutorialNumbers").textContent =
-            `Fill the grid using symbols ` +
-            `1 through ${displayValue(size)}.`;
-
-        $("tutorialBoxes").textContent =
-            `Every row, column, and ${box}×${box} box ` +
-            `must contain each symbol exactly once.`;
+    function hideOverlays() {
+        document.querySelectorAll(".overlay")
+            .forEach(el => el.classList.add("hidden"));
     }
 
     function newGame() {
-        stopTimer();
+        gameToken++;
+        clearTimeout(wrongTimeout);
+        hideOverlays();
 
-        state.solution = makeSolution(state.size);
-        state.puzzle = makePuzzle(state.solution);
-        state.board = [...state.puzzle];
+        currentDaily = null;
+        selected = -1;
+        lives = 3; mistakes = 0; hints = 3; seconds = 0;
+        paused = false; finished = false; history = [];
 
-        state.selected = -1;
-        state.points = 0;
-        state.lives = 3;
-        state.mistakes = 0;
-        state.hints = 3;
-        state.seconds = 0;
-        state.history = [];
-        state.paused = false;
-        state.finished = false;
-        state.started = false;
+        const seed = mode === "levels"
+            ? hashString(`level-${size}-${difficulty}-${level}`)
+            : Math.floor(Math.random() * 4294967295);
 
-        $("pauseOverlay").classList.add("hidden");
-        $("resultOverlay").classList.add("hidden");
-        $("tutorialOverlay").classList.remove("hidden");
+        const generated = generatePuzzle(size, difficulty, seed);
+        solution = generated.solution;
+        puzzle = generated.puzzle;
+        board = [...puzzle];
+        fixed = puzzle.map(v => v !== 0);
 
         updateChoices();
-        updateTutorial();
         renderBoard();
-        renderNumberPad();
+        renderPad();
         renderLevels();
+        renderAchievements();
+        updateProgress();
         updateStats();
-
-        message("Select an empty square to begin.");
-    }
-
-    function startGame() {
-        $("tutorialOverlay").classList.add("hidden");
-
-        state.started = true;
-        state.paused = false;
-
+        updateDailyCard();
+        status("Select an empty square to begin.");
         startTimer();
-        message("Good luck! 🌸");
     }
 
-    function togglePause() {
-        if (!state.started || state.finished) return;
-
-        state.paused = true;
-        $("pauseOverlay").classList.remove("hidden");
+    function saveDailyProgress() {
+        if (!currentDaily || finished) return;
+        saved.dailyProgress[currentDaily] = {
+            board: [...board], lives, mistakes, hints, seconds
+        };
+        save();
     }
 
-    function resumeGame() {
-        state.paused = false;
-        $("pauseOverlay").classList.add("hidden");
+    function startDailyChallenge(key) {
+        if (key > dateKey(new Date())) return;
+
+        gameToken++;
+        clearTimeout(wrongTimeout);
+        hideOverlays();
+
+        currentDaily = key;
+        mode = "levels";
+        size = 9;
+        difficulty = "medium";
+        selected = -1;
+        lives = 3; mistakes = 0; hints = 3; seconds = 0;
+        paused = false; finished = false; history = [];
+
+        const generated = generatePuzzle(
+            size, difficulty, hashString(`daily-${key}`)
+        );
+        solution = generated.solution;
+        puzzle = generated.puzzle;
+        board = [...puzzle];
+        fixed = puzzle.map(v => v !== 0);
+
+        const progress = saved.dailyProgress[key];
+        if (progress && Array.isArray(progress.board) &&
+            progress.board.length === board.length) {
+            board = progress.board.map((value, i) =>
+                fixed[i] ? puzzle[i]
+                    : value === solution[i] ? value : 0
+            );
+            lives = Math.max(1, progress.lives ?? 3);
+            mistakes = progress.mistakes || 0;
+            hints = progress.hints ?? 3;
+            seconds = progress.seconds || 0;
+        }
+
+        updateChoices();
+        renderBoard();
+        renderPad();
+        renderLevels();
+        renderAchievements();
+        updateProgress();
+        updateStats();
+        status(`📅 Daily Challenge: ${key}`);
+        startTimer();
     }
 
-    function changeSize(size) {
-        state.size = size;
-        state.level = 1;
-        state.levelPage = 0;
-        newGame();
+    function finishGame(won) {
+        if (finished) return;
+        finished = true;
+        clearInterval(timerInterval);
+
+        if (won) {
+            saved.victories++;
+            if (saved.bestTime === null || seconds < saved.bestTime)
+                saved.bestTime = seconds;
+
+            if (currentDaily) {
+                if (!saved.dailyCompleted[currentDaily]) {
+                    saved.dailyCompleted[currentDaily] = true;
+                    saved.points += 100;
+                }
+                delete saved.dailyProgress[currentDaily];
+            } else if (mode === "levels") {
+                saved.completedLevels[levelKey(level)] = true;
+            }
+
+            setText("resultIcon", "🏆");
+            setText("resultTitle", "Puzzle Complete!");
+            setText("resultMessage", currentDaily
+                ? "Daily challenge completed! You earned 100 bonus points."
+                : "Excellent work! Puzzle solved."
+            );
+        } else {
+            setText("resultIcon", "💔");
+            setText("resultTitle", "Game Over");
+            setText("resultMessage", "You ran out of lives. Try again!");
+            if (currentDaily) delete saved.dailyProgress[currentDaily];
+        }
+
+        save();
+        updateStats();
+        updateProgress();
+        renderLevels();
+        renderAchievements();
+        updateDailyCard();
+        $("resultOverlay")?.classList.remove("hidden");
     }
 
-    function changeDifficulty(difficulty) {
-        state.difficulty = difficulty;
-        state.level = 1;
-        state.levelPage = 0;
-        newGame();
+    function updateDailyCard() {
+        const key = dateKey(new Date());
+        setText("dailyChallengeDate",
+            new Date(key + "T12:00:00").toLocaleDateString(undefined, {
+                weekday: "long", month: "long", day: "numeric"
+            })
+        );
+        setText("dailyChallengeStatus",
+            saved.dailyCompleted[key]
+                ? "✅ Today's challenge completed!"
+                : "Complete today's challenge!"
+        );
+        setText("dailyStatus",
+            saved.dailyCompleted[key]
+                ? "✅ Today's challenge completed!"
+                : "A new challenge is waiting!"
+        );
     }
 
-    function changeMode(mode) {
-        state.mode = mode;
-        state.level = 1;
-        state.levelPage = 0;
-        newGame();
+    // DAILY CHALLENGE CALENDAR
+    function ensureCalendar() {
+        if (!$("calendarOverlay")) {
+            const overlay = document.createElement("div");
+            overlay.id = "calendarOverlay";
+            overlay.className = "overlay hidden";
+            overlay.innerHTML = `
+          <div class="dialog-card calendar-card">
+            <h2>📅 Daily Challenge Calendar</h2>
+            <div class="calendar-nav">
+              <button type="button" id="previousMonth">‹</button>
+              <strong id="calendarMonth"></strong>
+              <button type="button" id="nextMonth">›</button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>Sun</span><span>Mon</span><span>Tue</span>
+              <span>Wed</span><span>Thu</span><span>Fri</span>
+              <span>Sat</span>
+            </div>
+            <div id="calendarDays" class="calendar-days"></div>
+            <p id="selectedChallengeDate"></p>
+            <p id="selectedChallengeStatus"></p>
+            <button type="button" id="playSelectedChallenge"
+                    class="primary">Play Selected Day</button>
+            <button type="button" id="closeCalendarBtn">Close</button>
+          </div>`;
+            document.body.appendChild(overlay);
+        }
+
+        if (!$("viewCalendarBtn")) {
+            const dailyButton = $("dailyChallengeBtn") || $("dailyBtn");
+            if (dailyButton) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.id = "viewCalendarBtn";
+                button.textContent = "📅 Challenge Calendar";
+                button.className = "wide-btn calendar-open-btn";
+                button.style.width = "100%";
+                button.style.marginTop = "10px";
+                dailyButton.insertAdjacentElement("afterend", button);
+            }
+        }
+
+        $("viewCalendarBtn")?.addEventListener("click", openCalendar);
+        $("closeCalendarBtn")?.addEventListener("click", () =>
+            $("calendarOverlay").classList.add("hidden")
+        );
+        $("previousMonth")?.addEventListener("click", () => changeMonth(-1));
+        $("nextMonth")?.addEventListener("click", () => changeMonth(1));
+        $("playSelectedChallenge")?.addEventListener("click", () =>
+            startDailyChallenge(selectedDate)
+        );
+    }
+
+    function openCalendar() {
+        const now = new Date();
+        calendarDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        selectedDate = dateKey(now);
+        renderCalendar();
+        $("calendarOverlay")?.classList.remove("hidden");
+    }
+
+    function renderCalendar() {
+        const year = calendarDate.getFullYear();
+        const month = calendarDate.getMonth();
+
+        setText("calendarMonth",
+            calendarDate.toLocaleDateString(undefined, {
+                month: "long", year: "numeric"
+            })
+        );
+
+        const container = $("calendarDays");
+        if (!container) return;
+        container.replaceChildren();
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const days = new Date(year, month + 1, 0).getDate();
+        const todayKey = dateKey(new Date());
+
+        for (let i = 0; i < firstDay; i++)
+            container.appendChild(document.createElement("div"));
+
+        for (let day = 1; day <= days; day++) {
+            const key = dateKey(new Date(year, month, day));
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = saved.dailyCompleted[key]
+                ? `${day} ✓` : String(day);
+            button.disabled = key > todayKey;
+
+            if (key === todayKey) button.classList.add("today");
+            if (key === selectedDate) button.classList.add("selected-day");
+            if (saved.dailyCompleted[key])
+                button.classList.add("completed");
+
+            button.addEventListener("click", () => {
+                selectedDate = key;
+                renderCalendar();
+            });
+            container.appendChild(button);
+        }
+
+        setText("selectedChallengeDate",
+            new Date(selectedDate + "T12:00:00")
+                .toLocaleDateString(undefined, {
+                    weekday: "long", month: "long",
+                    day: "numeric", year: "numeric"
+                })
+        );
+
+        setText("selectedChallengeStatus",
+            saved.dailyCompleted[selectedDate]
+                ? "✅ Completed! You can replay this puzzle."
+                : "Ready to play this daily challenge!"
+        );
+
+        if ($("playSelectedChallenge"))
+            $("playSelectedChallenge").disabled =
+                selectedDate > todayKey;
+
+        if ($("nextMonth"))
+            $("nextMonth").disabled =
+                year > new Date().getFullYear() ||
+                (year === new Date().getFullYear() &&
+                    month >= new Date().getMonth());
+    }
+
+    function changeMonth(direction) {
+        calendarDate = new Date(
+            calendarDate.getFullYear(),
+            calendarDate.getMonth() + direction, 1
+        );
+        selectedDate = dateKey(calendarDate);
+        renderCalendar();
+    }
+
+    function undoMove() {
+        if (paused || finished) return;
+        const move = history.pop();
+        if (!move) return;
+        board[move.index] = move.previous;
+        selected = move.index;
+        renderBoard();
+        updateProgress();
+        saveDailyProgress();
+        status("Move undone.");
+    }
+
+    function eraseCell() {
+        if (paused || finished || selected < 0 || fixed[selected])
+            return;
+        if (!board[selected]) return;
+
+        history.push({ index: selected, previous: board[selected] });
+        board[selected] = 0;
+        renderBoard();
+        updateProgress();
+        saveDailyProgress();
+        status("Number erased.");
+    }
+
+    function giveHint() {
+        if (paused || finished || hints <= 0) return;
+        let index = selected;
+
+        if (index < 0 || fixed[index] ||
+            board[index] === solution[index]) {
+            index = board.findIndex((v, i) =>
+                !fixed[i] && v !== solution[i]
+            );
+        }
+        if (index < 0) return;
+
+        history.push({ index, previous: board[index] });
+        board[index] = solution[index];
+        selected = index;
+        hints--;
+
+        renderBoard();
+        updateStats();
+        updateProgress();
+        saveDailyProgress();
+
+        if (board.every((v, i) => v === solution[i]))
+            finishGame(true);
+    }
+
+    function setTheme(theme) {
+        const app = document.querySelector(".sakura-app");
+        if (!app) return;
+        app.classList.remove(
+            "theme-sakura", "theme-lavender", "theme-night"
+        );
+        app.classList.add("theme-" + theme);
+        saved.theme = theme;
+        save();
     }
 
     function bindEvents() {
-        document.querySelectorAll("[data-size]").forEach(button => {
-            button.addEventListener("click", () => {
-                changeSize(Number(button.dataset.size));
+        document.querySelectorAll("[data-size]").forEach(b =>
+            b.addEventListener("click", () => {
+                size = Number(b.dataset.size);
+                level = 1; levelPage = 0;
+                newGame();
+            })
+        );
+
+        document.querySelectorAll("[data-difficulty]").forEach(b =>
+            b.addEventListener("click", () => {
+                difficulty = b.dataset.difficulty;
+                level = 1; levelPage = 0;
+                newGame();
+            })
+        );
+
+        document.querySelectorAll("[data-mode]").forEach(b =>
+            b.addEventListener("click", () => {
+                mode = b.dataset.mode;
+                newGame();
+            })
+        );
+
+        $("themeSelect")?.addEventListener("change", e =>
+            setTheme(e.target.value)
+        );
+
+        $("newGameBtn")?.addEventListener("click", newGame);
+        $("hintBtn")?.addEventListener("click", giveHint);
+        $("undoBtn")?.addEventListener("click", undoMove);
+        $("eraseBtn")?.addEventListener("click", eraseCell);
+
+        $("previousLevels")?.addEventListener("click", () => {
+            levelPage = Math.max(0, levelPage - 1);
+            renderLevels();
+        });
+        $("nextLevels")?.addEventListener("click", () => {
+            levelPage = Math.min(4, levelPage + 1);
+            renderLevels();
+        });
+
+        ($("dailyChallengeBtn") || $("dailyBtn"))
+            ?.addEventListener("click", () =>
+                startDailyChallenge(dateKey(new Date()))
+            );
+
+        $("pauseBtn")?.addEventListener("click", () => {
+            if (finished || paused) return;
+            paused = true;
+            $("pauseOverlay")?.classList.remove("hidden");
+        });
+
+        $("resumeBtn")?.addEventListener("click", () => {
+            paused = false;
+            $("pauseOverlay")?.classList.add("hidden");
+        });
+
+        ($("helpBtn") || $("tutorialBtn"))
+            ?.addEventListener("click", () => {
+                setText("tutorialNumbers",
+                    size === 16
+                        ? "Use numbers 1–9 and letters A–G."
+                        : `Use numbers 1 through ${size}.`
+                );
+                const root = Math.sqrt(size);
+                setText("tutorialBoxes",
+                    `Each ${root}×${root} box must contain each symbol once.`
+                );
+                $("tutorialOverlay")?.classList.remove("hidden");
             });
-        });
 
-        document.querySelectorAll("[data-difficulty]").forEach(button => {
-            button.addEventListener("click", () => {
-                changeDifficulty(button.dataset.difficulty);
-            });
-        });
+        $("startBtn")?.addEventListener("click", () =>
+            $("tutorialOverlay")?.classList.add("hidden")
+        );
 
-        document.querySelectorAll("[data-mode]").forEach(button => {
-            button.addEventListener("click", () => {
-                changeMode(button.dataset.mode);
-            });
-        });
-
-        $("themeSelect").addEventListener("change", event => {
-            setTheme(event.target.value);
-        });
-
-        $("newGameBtn").addEventListener("click", newGame);
-        $("hintBtn").addEventListener("click", useHint);
-        $("undoBtn").addEventListener("click", undoMove);
-        $("eraseBtn").addEventListener("click", eraseSelected);
-
-        $("pauseBtn").addEventListener("click", togglePause);
-        $("resumeBtn").addEventListener("click", resumeGame);
-
-        $("startBtn").addEventListener("click", startGame);
-
-        $("helpBtn").addEventListener("click", () => {
-            state.paused = true;
-            updateTutorial();
-            $("tutorialOverlay").classList.remove("hidden");
-        });
-
-        $("previousLevels").addEventListener("click", () => {
-            if (state.levelPage > 0) {
-                state.levelPage--;
-                renderLevels();
+        $("resultBtn")?.addEventListener("click", () => {
+            if (currentDaily) {
+                startDailyChallenge(currentDaily);
+                return;
             }
-        });
-
-        $("nextLevels").addEventListener("click", () => {
-            if (state.levelPage < 4) {
-                state.levelPage++;
-                renderLevels();
+            if (finished && lives > 0 &&
+                mode === "levels" && level < TOTAL_LEVELS) {
+                level++;
+                levelPage = Math.floor((level - 1) / 10);
             }
-        });
-
-        $("resultBtn").addEventListener("click", () => {
-            $("resultOverlay").classList.add("hidden");
-
-            if (state.finished &&
-                state.board.every(
-                    (value, i) => value === state.solution[i]
-                ) &&
-                state.mode === "levels" &&
-                state.level < TOTAL_LEVELS) {
-                state.level++;
-                state.levelPage =
-                    Math.floor((state.level - 1) / 10);
-            }
-
             newGame();
         });
 
-        document.addEventListener("keydown", event => {
-            if (!canPlay()) return;
-
-            if (event.target.matches("input, select, textarea")) {
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                $("calendarOverlay")?.classList.add("hidden");
                 return;
             }
-
-            const key = event.key.toUpperCase();
-            const number = SYMBOLS.indexOf(key) + 1;
-
-            if (number >= 1 && number <= state.size) {
-                enterNumber(number);
-            } else if (
-                event.key === "Backspace" ||
-                event.key === "Delete"
-            ) {
-                eraseSelected();
+            if (paused || finished) return;
+            if (["Backspace", "Delete"].includes(e.key)) {
+                eraseCell();
+                return;
             }
+            let number = Number(e.key);
+            if (size === 16 && /^[A-Ga-g]$/.test(e.key))
+                number = e.key.toUpperCase().charCodeAt(0) - 55;
+            if (number >= 1 && number <= size)
+                enterNumber(number);
         });
     }
 
     function init() {
-        loadProgress();
+        ensureCalendar();
         bindEvents();
-        setTheme(state.theme);
+
+        if ($("themeSelect"))
+            $("themeSelect").value = saved.theme;
+
+        setTheme(saved.theme);
+        updateDailyCard();
         newGame();
     }
 
-    if (document.readyState === "loading") {
+    if (document.readyState === "loading")
         document.addEventListener("DOMContentLoaded", init);
-    } else {
+    else
         init();
-    }
+
 })();
