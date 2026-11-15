@@ -1,57 +1,94 @@
-﻿
+
+/* TEAM 8 CARD GAMES - ITERATION 3 */
+
+:root {
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+button, select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
 .card-game-app {
     --card-width: 78px;
     --card-height: 110px;
-    --card-gap: 12px;
-    --table-color: #6946a0;
+    --card-gap: 13px;
+    --back-color: #8650c8;
     --header-color: #422477;
     --panel-color: #f7efff;
     --text-color: #3e206e;
     --accent-color: #9035d5;
-    --back-color: #8650c8;
+    --table-color: linear-gradient( 135deg, #57318e, #8657ae, #bf85ca );
     min-height: 100vh;
     color: white;
     background: var(--table-color);
-    font-family: "Segoe UI", Arial, sans-serif;
 }
 
-    .card-game-app *,
-    .card-game-app *::before,
-    .card-game-app *::after {
-        box-sizing: border-box;
-    }
+.theme-sakura {
+    --table-color: linear-gradient( 135deg, #57318e, #8657ae, #bf85ca );
+    --header-color: #422477;
+    --panel-color: #f7efff;
+    --text-color: #3e206e;
+    --accent-color: #9035d5;
+}
 
-    .card-game-app.theme-sakura {
-        --table-color: linear-gradient(135deg, #57318e, #8657ae, #bf85ca);
-        --header-color: #422477;
-        --panel-color: #f7efff;
-        --text-color: #3e206e;
-        --accent-color: #9035d5;
-    }
+.theme-green {
+    --table-color: linear-gradient( 135deg, #135b3c, #247d53 );
+    --header-color: #10442e;
+    --panel-color: #edf9f0;
+    --text-color: #164d34;
+    --accent-color: #258453;
+}
 
-    .card-game-app.theme-green {
-        --table-color: linear-gradient(135deg, #135b3c, #247d53);
-        --header-color: #10442e;
-        --panel-color: #edf9f0;
-        --text-color: #164d34;
-        --accent-color: #258453;
-    }
+.theme-midnight {
+    --table-color: linear-gradient( 135deg, #101b3d, #294a7a );
+    --header-color: #101932;
+    --panel-color: #eef3ff;
+    --text-color: #1b315e;
+    --accent-color: #4267b5;
+}
 
-    .card-game-app.theme-midnight {
-        --table-color: linear-gradient(135deg, #101b3d, #294a7a);
-        --header-color: #101932;
-        --panel-color: #eef3ff;
-        --text-color: #1b315e;
-        --accent-color: #4267b5;
-    }
+.back-purple {
+    --back-color: #8650c8;
+}
+
+.back-pink {
+    --back-color: #e365a4;
+}
+
+.back-blue {
+    --back-color: #397bc8;
+}
+
+.back-classic {
+    --back-color: #344458;
+}
 
 .cg-header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 16px;
-    padding: 18px 24px;
+    gap: 20px;
+    padding: 20px 28px;
     background: var(--header-color);
 }
 
@@ -71,27 +108,27 @@
 
     .cg-heading h1 {
         margin: 0;
-        font-size: 27px;
+        font-size: 28px;
         font-weight: 800;
     }
 
     .cg-heading p {
-        margin: 4px 0 0;
+        margin: 5px 0 0;
+        color: #eee1ff;
         font-size: 13px;
-        color: #e7d8f7;
     }
 
 .cg-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 9px;
 }
 
     .cg-stats span {
-        padding: 9px 12px;
+        background: #ffffff20;
         border: 1px solid #ffffff55;
+        padding: 10px 13px;
         border-radius: 20px;
-        background: #ffffff1a;
         font-size: 13px;
         white-space: nowrap;
     }
@@ -99,10 +136,10 @@
 .cg-layout {
     display: grid;
     grid-template-columns: 250px minmax(0, 1fr);
-    gap: 20px;
-    max-width: 1450px;
+    gap: 22px;
+    max-width: 1500px;
+    padding: 24px;
     margin: 0 auto;
-    padding: 22px;
 }
 
 .cg-sidebar {
@@ -113,71 +150,70 @@
 
 .cg-panel {
     padding: 20px;
-    border-radius: 20px;
     background: var(--panel-color);
     color: var(--text-color);
-    box-shadow: 0 8px 25px #0000001a;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px #00000020;
 }
 
     .cg-panel h2 {
-        margin: 0 0 17px;
         font-size: 20px;
-        font-weight: 800;
+        margin: 0 0 17px;
     }
 
 .cg-game {
     display: block;
     width: 100%;
-    margin: 9px 0;
     padding: 13px;
+    margin: 9px 0;
+    text-align: left;
     border: 2px solid #d5b7ef;
     border-radius: 13px;
     background: white;
     color: var(--text-color);
-    text-align: left;
     font-weight: 800;
+    transition: transform .15s, background .15s;
 }
 
-    .cg-game small {
-        display: block;
-        margin-top: 4px;
-        font-size: 11px;
-        font-weight: 500;
+    .cg-game:hover {
+        transform: translateY(-2px);
     }
 
     .cg-game.active {
         background: var(--accent-color);
-        border-color: var(--accent-color);
         color: white;
+        border-color: var(--accent-color);
     }
 
-    .cg-game.upcoming {
-        opacity: .55;
-        cursor: not-allowed;
+    .cg-game small {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        margin-top: 5px;
     }
 
 .cg-panel label {
     display: block;
-    margin: 16px 0 7px;
+    margin: 15px 0 7px;
     font-size: 13px;
     font-weight: 800;
 }
 
 .cg-panel select {
+    display: block;
     width: 100%;
     padding: 11px;
     border: 2px solid #d5b7ef;
     border-radius: 11px;
-    background: white;
     color: #342050;
-    font-size: 14px;
+    background: white;
 }
 
 .cg-setting-note {
-    margin: 15px 0 0;
+    margin: 17px 0 0;
     font-size: 12px;
     line-height: 1.6;
-    opacity: .75;
+    opacity: .8;
 }
 
 .cg-main {
@@ -188,7 +224,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
     .cg-toolbar button,
@@ -199,7 +235,6 @@
         background: #f3dfff;
         color: #43216e;
         font-weight: 800;
-        cursor: pointer;
     }
 
         .cg-toolbar button:hover,
@@ -208,37 +243,49 @@
         }
 
         .cg-toolbar button:disabled {
-            opacity: .45;
+            opacity: .4;
             cursor: not-allowed;
         }
 
 .cg-message {
     min-height: 28px;
-    margin-bottom: 12px;
-    color: #f8eaff;
+    margin-bottom: 14px;
+    color: #fff1ff;
     font-size: 14px;
 }
 
 .cg-board-scroll {
     overflow-x: auto;
-    padding: 5px 5px 20px;
+    padding: 5px 5px 28px;
 }
 
 .cg-board {
-    min-width: 630px;
+    min-width: 680px;
 }
 
 .cg-top-row {
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 32px;
+    align-items: flex-start;
+    gap: 18px;
+    margin-bottom: 36px;
 }
 
 .cg-draw-area,
-.cg-foundations {
+.cg-foundations,
+.cg-freecells {
     display: flex;
     gap: var(--card-gap);
+}
+
+.cg-pile-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .sol-slot {
@@ -246,16 +293,21 @@
     flex-shrink: 0;
     width: var(--card-width);
     height: var(--card-height);
-    border: 2px dashed #ffffff77;
-    border-radius: 10px;
-    background: #ffffff12;
-    color: #ffffffb5;
+    border: 2px dashed #ffffff88;
+    border-radius: 11px;
+    background: #ffffff16;
     display: flex;
-    align-items: center;
     justify-content: center;
-    font-size: 26px;
+    align-items: center;
+    color: #ffffffc9;
+    font-size: 28px;
     cursor: pointer;
 }
+
+    .sol-slot:hover,
+    .sol-column:hover::before {
+        border-color: #ffffffcc;
+    }
 
 .sol-tableau {
     display: grid;
@@ -264,12 +316,23 @@
     align-items: start;
 }
 
+    .sol-tableau.eight-columns {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }
+
+    .sol-tableau.ten-columns {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+    }
+
+    .sol-tableau.eight-columns,
+    .sol-tableau.ten-columns {
+        min-width: max-content;
+    }
+
 .sol-column {
     position: relative;
-    min-width: 0;
+    min-width: var(--card-width);
     min-height: var(--card-height);
-    border: none;
-    background: transparent;
     cursor: pointer;
 }
 
@@ -280,9 +343,9 @@
         left: 0;
         width: var(--card-width);
         height: var(--card-height);
-        border: 2px dashed #ffffff70;
-        border-radius: 10px;
-        background: #ffffff12;
+        border: 2px dashed #ffffff66;
+        border-radius: 11px;
+        background: #ffffff10;
         pointer-events: none;
     }
 
@@ -293,14 +356,15 @@
     width: var(--card-width);
     height: var(--card-height);
     border: 1px solid #d0c7d8;
-    border-radius: 9px;
-    background: #fff;
+    border-radius: 10px;
+    background: white;
     color: #20172c;
     box-shadow: 0 3px 8px #00000035;
-    cursor: grab;
     user-select: none;
     -webkit-user-select: none;
+    cursor: grab;
     overflow: hidden;
+    touch-action: manipulation;
 }
 
     .sol-card.red {
@@ -314,51 +378,13 @@
         cursor: default;
     }
 
-.card-game-app.back-purple {
-    --back-color: #8650c8;
-}
-
-.card-game-app.back-pink {
-    --back-color: #e365a4;
-}
-
-.card-game-app.back-blue {
-    --back-color: #397bc8;
-}
-
-.card-game-app.back-classic {
-    --back-color: #344458;
-}
-
-.sol-card.selected {
-    outline: 4px solid #ffe377;
-    outline-offset: 2px;
-}
-
-.sol-card.dragging {
-    opacity: .45;
-}
-
-.sol-card.hint-source {
-    outline: 4px solid #ffe377;
-    outline-offset: 2px;
-}
-
-.sol-slot.hint-target,
-.sol-column.hint-target::before,
-.sol-slot.drop-target,
-.sol-column.drop-target::before {
-    border-color: #ffe377;
-    background: #ffe37745;
-}
-
 .sol-card-corner {
     position: absolute;
     top: 5px;
     left: 6px;
     font-size: 16px;
     font-weight: 900;
-    line-height: 1.05;
+    line-height: 1;
 }
 
 .sol-card-center {
@@ -382,14 +408,46 @@
     left: -2px;
 }
 
+.sol-card.selected,
+.sol-card.hint-source {
+    outline: 4px solid #ffe377;
+    outline-offset: 2px;
+}
+
+.sol-card.dragging {
+    opacity: .45;
+}
+
+.sol-slot.hint-target,
+.sol-column.hint-target::before,
+.sol-slot.drop-target,
+.sol-column.drop-target::before {
+    border-color: #ffe377;
+    background: #ffe37740;
+}
+
+.cg-spider-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 22px;
+    font-weight: 700;
+}
+
+    .cg-spider-info span {
+        font-weight: 400;
+        font-size: 13px;
+    }
+
 .sol-overlay {
     position: fixed;
-    z-index: 2000;
     inset: 0;
+    z-index: 2000;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 15px;
+    align-items: center;
+    padding: 16px;
     background: #160d2be0;
 }
 
@@ -398,10 +456,10 @@
     }
 
 .sol-dialog {
-    width: min(500px, 100%);
+    width: min(480px, 100%);
     max-height: 90vh;
     overflow-y: auto;
-    padding: 28px;
+    padding: 30px;
     border-radius: 24px;
     background: #292439;
     color: white;
@@ -410,20 +468,16 @@
 }
 
 .sol-dialog-icon {
-    font-size: 46px;
+    font-size: 40px;
 }
 
 .sol-dialog h2 {
-    margin: 8px 0 20px;
+    margin: 12px 0;
 }
 
 .sol-dialog p {
-    color: #d5c8e8;
     line-height: 1.6;
-}
-
-.sol-dialog button {
-    margin-top: 12px;
+    color: #e3d6ef;
 }
 
 @media (max-width: 1050px) {
@@ -439,7 +493,7 @@
 
 @media (max-width: 650px) {
     .cg-header {
-        padding: 14px;
+        padding: 16px;
     }
 
     .cg-heading h1 {
@@ -455,15 +509,12 @@
     }
 
     .cg-panel {
-        padding: 15px;
+        padding: 16px;
     }
 
     .cg-toolbar button {
         padding: 10px;
         font-size: 13px;
     }
-
-    .cg-board {
-        min-width: 630px;
-    }
 }
+
