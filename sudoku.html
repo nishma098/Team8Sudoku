@@ -1,12 +1,13 @@
 
-@page
-@{
-    ViewData["Title"] = "Sudoku";
-}
-
-<link rel="stylesheet"
-      href="~/css/sudoku.css"
-      asp-append-version="true" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku | Game Hub</title>
+    <link rel="stylesheet" href="Team8Sudoku/wwwroot/css/sudoku.css">
+</head>
+<body>
 
 <div class="sakura-app theme-sakura">
 
@@ -22,13 +23,8 @@
         </div>
 
         <div class="header-actions">
-            <button type="button" id="pauseBtn">
-                ⏸ Pause
-            </button>
-
-            <button type="button" id="helpBtn">
-                ❔ Help
-            </button>
+            <button type="button" id="pauseBtn">⏸ Pause</button>
+            <button type="button" id="helpBtn">❔ Help</button>
         </div>
 
     </header>
@@ -95,8 +91,7 @@
                 <h3>Board Size</h3>
 
                 <div id="sizeChoices" class="choice-row">
-                    <button type="button"
-                            data-size="4">
+                    <button type="button" data-size="4">
                         4×4
                     </button>
 
@@ -106,8 +101,7 @@
                         9×9
                     </button>
 
-                    <button type="button"
-                            data-size="16">
+                    <button type="button" data-size="16">
                         16×16
                     </button>
                 </div>
@@ -118,8 +112,7 @@
                 <h3>Difficulty</h3>
 
                 <div id="difficultyChoices" class="choice-row">
-                    <button type="button"
-                            data-difficulty="easy">
+                    <button type="button" data-difficulty="easy">
                         Easy
                     </button>
 
@@ -129,8 +122,7 @@
                         Medium
                     </button>
 
-                    <button type="button"
-                            data-difficulty="hard">
+                    <button type="button" data-difficulty="hard">
                         Hard
                     </button>
                 </div>
@@ -147,8 +139,7 @@
                         Levels
                     </button>
 
-                    <button type="button"
-                            data-mode="practice">
+                    <button type="button" data-mode="practice">
                         Practice
                     </button>
                 </div>
@@ -159,17 +150,9 @@
                 <h3>Theme</h3>
 
                 <select id="themeSelect">
-                    <option value="sakura">
-                        🌸 Sakura
-                    </option>
-
-                    <option value="lavender">
-                        💜 Lavender
-                    </option>
-
-                    <option value="night">
-                        🌙 Night
-                    </option>
+                    <option value="sakura">🌸 Sakura</option>
+                    <option value="lavender">💜 Lavender</option>
+                    <option value="night">🌙 Night</option>
                 </select>
             </div>
 
@@ -211,19 +194,15 @@
                     <!-- GAME BUTTONS -->
                     <div class="game-actions">
 
-                        <button type="button"
-                                id="hintBtn">
-                            💡 Hint
-                            (<span id="hintsLeft">3</span>)
+                        <button type="button" id="hintBtn">
+                            💡 Hint (<span id="hintsLeft">3</span>)
                         </button>
 
-                        <button type="button"
-                                id="undoBtn">
+                        <button type="button" id="undoBtn">
                             ↶ Undo
                         </button>
 
-                        <button type="button"
-                                id="eraseBtn">
+                        <button type="button" id="eraseBtn">
                             ⌫ Erase
                         </button>
 
@@ -257,17 +236,13 @@
 
                 <div class="level-navigation">
 
-                    <button type="button"
-                            id="previousLevels">
+                    <button type="button" id="previousLevels">
                         ◀ Previous
                     </button>
 
-                    <span id="levelPage">
-                        1 / 5
-                    </span>
+                    <span id="levelPage">1 / 5</span>
 
-                    <button type="button"
-                            id="nextLevels">
+                    <button type="button" id="nextLevels">
                         Next ▶
                     </button>
 
@@ -318,8 +293,7 @@
     </main>
 
     <!-- TUTORIAL OVERLAY -->
-    <div id="tutorialOverlay"
-         class="overlay hidden">
+    <div id="tutorialOverlay" class="overlay hidden">
 
         <div class="dialog-card">
 
@@ -351,8 +325,7 @@
     </div>
 
     <!-- PAUSE OVERLAY -->
-    <div id="pauseOverlay"
-         class="overlay hidden">
+    <div id="pauseOverlay" class="overlay hidden">
 
         <div class="dialog-card">
 
@@ -372,13 +345,11 @@
     </div>
 
     <!-- RESULT OVERLAY -->
-    <div id="resultOverlay"
-         class="overlay hidden">
+    <div id="resultOverlay" class="overlay hidden">
 
         <div class="dialog-card">
 
-            <div id="resultIcon"
-                 class="dialog-icon">
+            <div id="resultIcon" class="dialog-icon">
                 🏆
             </div>
 
@@ -399,7 +370,8 @@
 
 </div>
 
-@section Scripts {
-    <script src="~/js/sudoku.js"
-            asp-append-version="true"></script>
-}
+<script src="Team8Sudoku/wwwroot/js/sudoku.js"></script>
+
+</body>
+</html>
+
