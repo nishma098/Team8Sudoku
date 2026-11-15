@@ -1,186 +1,405 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team 8 Sudoku</title>
-    <link rel="stylesheet" href="Team8Sudoku/wwwroot/css/sudoku.css">
-</head>
-<body>
+@page
+@{
+    ViewData["Title"] = "Sudoku";
+}
 
-<div class="sakura-app">
+<link rel="stylesheet"
+      href="~/css/sudoku.css"
+      asp-append-version="true" />
+
+<div class="sakura-app theme-sakura">
+
+    <!-- HEADER -->
     <header class="sakura-header">
+
         <div class="logo">🌸 Sudoku</div>
 
         <div class="header-stats">
             <span>⭐ Points: <b id="points">0</b></span>
             <span>❤️ Lives: <b id="lives">3</b></span>
-            <span>⏱ Time: <b id="timer">00:00</b></span>
+            <span>⏱️ Time: <b id="timer">00:00</b></span>
         </div>
 
         <div class="header-actions">
-            <button id="pauseBtn" type="button">⏸ Pause</button>
-            <button id="helpBtn" type="button">❔ Help</button>
-            <a href="index.html">← Game Hub</a>
+            <button type="button" id="pauseBtn">
+                ⏸ Pause
+            </button>
+
+            <button type="button" id="helpBtn">
+                ❔ Help
+            </button>
         </div>
+
     </header>
 
+    <!-- TOP DASHBOARD -->
+    <section class="top-dashboard">
+
+        <!-- DAILY CHALLENGE -->
+        <div class="panel dashboard-card">
+            <h2>📅 Daily Challenge</h2>
+
+            <div class="daily-challenge-card">
+                <h3 id="dailyChallengeDate">Today</h3>
+
+                <p id="dailyChallengeStatus">
+                    Complete today's challenge!
+                </p>
+
+                <p>🏆 Bonus: 100 points</p>
+
+                <button type="button"
+                        id="dailyChallengeBtn"
+                        class="primary">
+                    Play Daily Challenge
+                </button>
+            </div>
+        </div>
+
+        <!-- BEST TIME -->
+        <div class="panel dashboard-card">
+            <h2>⏱️ Best Time</h2>
+
+            <div class="best-time">
+                <span>Personal Best</span>
+                <strong id="bestTime">--:--</strong>
+            </div>
+
+            <p class="muted">
+                Complete puzzles to improve your record.
+            </p>
+        </div>
+
+        <!-- ACHIEVEMENTS -->
+        <div class="panel dashboard-card">
+            <h2>🏆 Achievements</h2>
+
+            <div id="achievementList"
+                 class="achievement-list">
+            </div>
+        </div>
+
+    </section>
+
+    <!-- MAIN GAME LAYOUT -->
     <main class="game-layout">
 
+        <!-- LEFT SETTINGS PANEL -->
         <aside class="panel settings-panel">
-            <h2>⚙ Game Settings</h2>
 
+            <h2>⚙️ Game Settings</h2>
+
+            <!-- BOARD SIZE -->
             <div class="setting-group">
                 <h3>Board Size</h3>
-                <div class="choice-row" id="sizeChoices">
-                    <button type="button" data-size="4">4×4</button>
-                    <button type="button" data-size="9" class="active">9×9</button>
-                    <button type="button" data-size="16">16×16</button>
+
+                <div id="sizeChoices" class="choice-row">
+                    <button type="button"
+                            data-size="4">
+                        4×4
+                    </button>
+
+                    <button type="button"
+                            data-size="9"
+                            class="active">
+                        9×9
+                    </button>
+
+                    <button type="button"
+                            data-size="16">
+                        16×16
+                    </button>
                 </div>
             </div>
 
+            <!-- DIFFICULTY -->
             <div class="setting-group">
                 <h3>Difficulty</h3>
-                <div class="choice-row" id="difficultyChoices">
-                    <button type="button" data-difficulty="easy">Easy</button>
-                    <button type="button" data-difficulty="medium" class="active">Medium</button>
-                    <button type="button" data-difficulty="hard">Hard</button>
+
+                <div id="difficultyChoices" class="choice-row">
+                    <button type="button"
+                            data-difficulty="easy">
+                        Easy
+                    </button>
+
+                    <button type="button"
+                            data-difficulty="medium"
+                            class="active">
+                        Medium
+                    </button>
+
+                    <button type="button"
+                            data-difficulty="hard">
+                        Hard
+                    </button>
                 </div>
             </div>
 
+            <!-- GAME MODE -->
             <div class="setting-group">
                 <h3>Game Mode</h3>
-                <div class="choice-row" id="modeChoices">
-                    <button type="button" data-mode="levels" class="active">👑 Levels</button>
-                    <button type="button" data-mode="practice">♾ Practice</button>
+
+                <div id="modeChoices" class="choice-row">
+                    <button type="button"
+                            data-mode="levels"
+                            class="active">
+                        Levels
+                    </button>
+
+                    <button type="button"
+                            data-mode="practice">
+                        Practice
+                    </button>
                 </div>
             </div>
 
+            <!-- THEME -->
             <div class="setting-group">
                 <h3>Theme</h3>
+
                 <select id="themeSelect">
-                    <option value="sakura">🌸 Sakura</option>
-                    <option value="lavender">💜 Lavender</option>
-                    <option value="night">🌙 Night</option>
+                    <option value="sakura">
+                        🌸 Sakura
+                    </option>
+
+                    <option value="lavender">
+                        💜 Lavender
+                    </option>
+
+                    <option value="night">
+                        🌙 Night
+                    </option>
                 </select>
             </div>
 
-            <p id="gameStatus" class="status" role="status">
-                Select an empty square to begin.
+            <p id="gameStatus"
+               class="status"
+               aria-live="polite">
+                Select an empty square.
             </p>
+
         </aside>
 
+        <!-- CENTER GAME BOARD -->
         <section class="board-column">
-            <div class="board-panel">
-                <div id="sudoku-board"
-                     class="sudoku-board"
-                     role="grid"
-                     aria-label="Sudoku board"></div>
-            </div>
 
-            <div id="numberPad" class="number-pad"></div>
+            <div class="board-game-layout">
 
-            <div class="game-actions">
-                <button type="button" id="hintBtn" class="primary">
-                    💡 Hint (<span id="hintsLeft">3</span>)
-                </button>
-                <button type="button" id="undoBtn">↶ Undo</button>
-                <button type="button" id="eraseBtn">⌫ Erase</button>
-                <button type="button" id="newGameBtn">⟳ New Game</button>
+                <!-- NUMBER PAD -->
+                <aside class="side-number-panel">
+                    <h3>Numbers</h3>
+
+                    <div id="numberPad"
+                         class="number-pad">
+                    </div>
+                </aside>
+
+                <!-- SUDOKU BOARD -->
+                <div class="board-main">
+
+                    <div class="board-panel">
+
+                        <div id="sudoku-board"
+                             class="sudoku-board"
+                             role="grid"
+                             aria-label="Sudoku board">
+                        </div>
+
+                    </div>
+
+                    <!-- GAME BUTTONS -->
+                    <div class="game-actions">
+
+                        <button type="button"
+                                id="hintBtn">
+                            💡 Hint
+                            (<span id="hintsLeft">3</span>)
+                        </button>
+
+                        <button type="button"
+                                id="undoBtn">
+                            ↶ Undo
+                        </button>
+
+                        <button type="button"
+                                id="eraseBtn">
+                            ⌫ Erase
+                        </button>
+
+                        <button type="button"
+                                id="newGameBtn"
+                                class="primary">
+                            🔄 New Game
+                        </button>
+
+                    </div>
+
+                </div>
             </div>
         </section>
 
+        <!-- RIGHT PANEL -->
         <aside class="right-column">
+
+            <!-- LEVELS -->
             <div class="panel">
-                <h2>👑 Levels</h2>
-                <p id="levelRange" class="muted">Levels 1–10</p>
-                <div id="levelList" class="level-list"></div>
+
+                <h2>🏅 Levels</h2>
+
+                <p id="levelRange">
+                    Levels 1–10
+                </p>
+
+                <div id="levelList"
+                     class="level-list">
+                </div>
 
                 <div class="level-navigation">
-                    <button id="previousLevels" type="button">← Previous</button>
-                    <span id="levelPage">1 / 5</span>
-                    <button id="nextLevels" type="button">Next →</button>
+
+                    <button type="button"
+                            id="previousLevels">
+                        ◀ Previous
+                    </button>
+
+                    <span id="levelPage">
+                        1 / 5
+                    </span>
+
+                    <button type="button"
+                            id="nextLevels">
+                        Next ▶
+                    </button>
+
                 </div>
             </div>
 
+            <!-- PROGRESS -->
             <div class="panel">
+
                 <h2>📊 Progress</h2>
-                <p id="progressLabel">Level 1 of 50</p>
+
+                <strong id="progressLabel">
+                    Level 1 of 50
+                </strong>
 
                 <div class="progress-track">
                     <div id="progressFill"></div>
                 </div>
 
-                <p id="cellProgress" class="muted">0 / 0 cells completed</p>
-                <p id="levelProgress" class="muted">0 / 50 levels completed</p>
+                <p id="cellProgress">
+                    0 cells completed
+                </p>
+
+                <p id="levelProgress">
+                    0 / 50 levels completed
+                </p>
+
+                <p id="mistakesText">
+                    Mistakes: 0
+                </p>
+
             </div>
 
+            <!-- TOTAL POINTS -->
             <div class="panel">
-                <h2>🏆 Total Points</h2>
-                <div id="totalPoints" class="total-points">0 ✦</div>
-                <p id="mistakesText" class="muted">Mistakes: 0</p>
+
+                <h2>⭐ Total Points</h2>
+
+                <div id="totalPoints"
+                     class="total-points">
+                    0 ✦
+                </div>
+
             </div>
+
         </aside>
+
     </main>
 
-    <span class="flower flower-one" aria-hidden="true">🌸</span>
-    <span class="flower flower-two" aria-hidden="true">🌸</span>
-    <span class="flower flower-three" aria-hidden="true">🌸</span>
-</div>
+    <!-- TUTORIAL OVERLAY -->
+    <div id="tutorialOverlay"
+         class="overlay hidden">
 
-<!-- Tutorial -->
-<div id="tutorialOverlay" class="overlay">
-    <div class="dialog-card">
-        <div class="dialog-icon">🧩</div>
-        <h2>How to Play Sudoku</h2>
+        <div class="dialog-card">
 
-        <p id="tutorialNumbers">
-            Fill the grid using numbers 1 through 9.
-        </p>
+            <div class="dialog-icon">🌸</div>
 
-        <p id="tutorialBoxes">
-            Every row, column, and 3×3 box must contain
-            each number only once.
-        </p>
+            <h2>Welcome to Sudoku!</h2>
 
-        <p>Select an empty square and choose a number from the number pad.</p>
-        <p>❤️ You normally have 3 lives. A wrong answer removes one heart.</p>
-        <p>💡 Use Hint if you need help.</p>
-        <p>♾ Practice Mode gives unlimited lives, but mistakes are counted.</p>
-        <p>↶ Undo reverses your last move, and Erase clears a number.</p>
-        <p>👑 Complete each level to unlock the next, up to Level 50.</p>
+            <p id="tutorialNumbers">
+                Fill the grid with numbers.
+            </p>
 
-        <button type="button" id="startBtn" class="primary">
-            Let's Play! ✨
-        </button>
+            <p id="tutorialBoxes">
+                Every row, column, and box must
+                contain each number exactly once.
+            </p>
+
+            <p>
+                Click an empty square, then choose
+                a number from the number pad.
+            </p>
+
+            <button type="button"
+                    id="startBtn"
+                    class="primary">
+                Let's Play!
+            </button>
+
+        </div>
     </div>
-</div>
 
-<!-- Pause screen -->
-<div id="pauseOverlay" class="overlay hidden">
-    <div class="dialog-card">
-        <div class="dialog-icon">⏸️</div>
-        <h2>Game Paused</h2>
-        <p>Your timer has stopped.</p>
-        <button type="button" id="resumeBtn" class="primary">
-            Resume Game
-        </button>
+    <!-- PAUSE OVERLAY -->
+    <div id="pauseOverlay"
+         class="overlay hidden">
+
+        <div class="dialog-card">
+
+            <div class="dialog-icon">⏸️</div>
+
+            <h2>Game Paused</h2>
+
+            <p>Your timer is paused.</p>
+
+            <button type="button"
+                    id="resumeBtn"
+                    class="primary">
+                Resume Game
+            </button>
+
+        </div>
     </div>
-</div>
 
-<!-- Win or lose screen -->
-<div id="resultOverlay" class="overlay hidden">
-    <div class="dialog-card">
-        <div class="dialog-icon" id="resultIcon">🏆</div>
-        <h2 id="resultTitle">Puzzle Complete!</h2>
-        <p id="resultMessage"></p>
-        <button type="button" id="resultBtn" class="primary">
-            Continue
-        </button>
+    <!-- RESULT OVERLAY -->
+    <div id="resultOverlay"
+         class="overlay hidden">
+
+        <div class="dialog-card">
+
+            <div id="resultIcon"
+                 class="dialog-icon">
+                🏆
+            </div>
+
+            <h2 id="resultTitle">
+                Puzzle Complete!
+            </h2>
+
+            <p id="resultMessage"></p>
+
+            <button type="button"
+                    id="resultBtn"
+                    class="primary">
+                Continue
+            </button>
+
+        </div>
     </div>
+
 </div>
 
-<script src="Team8Sudoku/wwwroot/js/sudoku.js"></script>
-</body>
-</html>
+@section Scripts {
+    <script src="~/js/sudoku.js"
+            asp-append-version="true"></script>
+}
