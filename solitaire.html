@@ -1,142 +1,457 @@
+@page
+@{
+    Layout = null;
+    ViewData["Title"] = "Card Games";
+}
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team 8 Card Games</title>
-    <link rel="stylesheet" href="Team8Sudoku/wwwroot/css/solitaire.css">
+    <meta charset="utf-8" />
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
+
+    <title>Card Games</title>
+
+    <link rel="stylesheet"
+          href="/css/solitaire.css?v=30" />
 </head>
+
 <body>
 
-<div id="cardGameApp" class="card-game-app theme-sakura">
-    <header class="cg-header">
-        <a href="index.html" class="cg-back">← Game Hub</a>
+    <div id="cardGameApp"
+         class="card-game-app theme-sakura back-purple">
 
-        <div class="cg-heading">
-            <h1>🃏 Team 8 Card Games</h1>
-            <p>Play, customize, and challenge yourself!</p>
-        </div>
+        <!-- HEADER -->
+        <header class="cg-header">
 
-        <div class="cg-stats">
-            <span>⏱ <b id="solTimer">00:00</b></span>
-            <span>⭐ <b id="solScore">0</b> points</span>
-            <span>↗ <b id="solMoves">0</b> moves</span>
-        </div>
-    </header>
+            <a class="cg-back" href="/">
+                ← Game Hub
+            </a>
 
-    <div class="cg-layout">
-        <aside class="cg-sidebar">
-            <section class="cg-panel">
-                <h2>🎮 Card Games</h2>
+            <div class="cg-heading">
 
-                <button type="button" class="cg-game active">
-                    ♠ Classic Solitaire
-                    <small>Playing now</small>
-                </button>
+                <h1>🌸 Card Games</h1>
 
-                <button type="button" class="cg-game upcoming" disabled>
-                    ♥ FreeCell
-                    <small>Coming Soon</small>
-                </button>
-
-                <button type="button" class="cg-game upcoming" disabled>
-                    ♣ Spider Solitaire
-                    <small>Coming Soon</small>
-                </button>
-            </section>
-
-            <section class="cg-panel">
-                <h2>⚙️ Game Settings</h2>
-
-                <label for="solDrawMode">Draw Mode</label>
-                <select id="solDrawMode">
-                    <option value="1">Draw 1 Card</option>
-                    <option value="3">Draw 3 Cards</option>
-                </select>
-
-                <label for="solTheme">Background Theme</label>
-                <select id="solTheme">
-                    <option value="sakura">🌸 Sakura Purple</option>
-                    <option value="green">🌿 Classic Green</option>
-                    <option value="midnight">🌙 Midnight Blue</option>
-                </select>
-
-                <label for="solCardBack">Card Back Design</label>
-                <select id="solCardBack">
-                    <option value="purple">💜 Purple</option>
-                    <option value="pink">🌸 Pink</option>
-                    <option value="blue">💙 Blue</option>
-                    <option value="classic">♠ Classic</option>
-                </select>
-
-                <p class="cg-setting-note">
-                    Your appearance settings are saved automatically.
-                    Changing Draw Mode starts a new game.
+                <p>
+                    Play, relax, and master the cards
                 </p>
-            </section>
-        </aside>
 
-        <main class="cg-main">
-            <div class="cg-toolbar">
-                <button type="button" id="solNew">🔄 New Game</button>
-                <button type="button" id="solUndo">↶ Undo</button>
-                <button type="button" id="solHint">💡 Hint</button>
-                <button type="button" id="solHelp">❔ How to Play</button>
             </div>
 
-            <div id="solMessage" class="cg-message"
-                 role="status" aria-live="polite">
-                Welcome! Select or drag a card.
+            <div class="cg-stats">
+
+                <span>
+                    ⭐ <b id="solScore">0</b> points
+                </span>
+
+                <span>
+                    🎯 <b id="solMoves">0</b> moves
+                </span>
+
+                <span>
+                    ⏱ <b id="solTimer">00:00</b>
+                </span>
+
             </div>
 
-            <div class="cg-board-scroll">
-                <div class="cg-board">
-                    <div class="cg-top-row">
-                        <div class="cg-draw-area">
-                            <div id="solStock" class="sol-slot"
-                                 aria-label="Draw pile"></div>
-                            <div id="solWaste" class="sol-slot"
-                                 aria-label="Waste pile"></div>
-                        </div>
+        </header>
 
-                        <div class="cg-foundations">
-                            <div class="sol-slot" data-foundation="0"></div>
-                            <div class="sol-slot" data-foundation="1"></div>
-                            <div class="sol-slot" data-foundation="2"></div>
-                            <div class="sol-slot" data-foundation="3"></div>
-                        </div>
+        <!-- MAIN LAYOUT -->
+        <div class="cg-layout">
+
+            <!-- LEFT SIDEBAR -->
+            <aside class="cg-sidebar">
+
+                <!-- GAME SELECTION -->
+                <section class="cg-panel">
+
+                    <h2>🃏 Choose a Game</h2>
+
+                    <button type="button"
+                            class="cg-game active"
+                            data-game="klondike">
+
+                        Classic Solitaire
+
+                        <small>
+                            Klondike • Draw 1 or 3
+                        </small>
+
+                    </button>
+
+                    <button type="button"
+                            class="cg-game"
+                            data-game="spider">
+
+                        Spider Solitaire
+
+                        <small>
+                            1, 2 or 4 suits
+                        </small>
+
+                    </button>
+
+                    <button type="button"
+                            class="cg-game"
+                            data-game="freecell">
+
+                        FreeCell
+
+                        <small>
+                            Strategy and free cells
+                        </small>
+
+                    </button>
+
+                </section>
+
+                <!-- CUSTOMIZATION -->
+                <section class="cg-panel">
+
+                    <h2>⚙️ Customize</h2>
+
+                    <!-- CLASSIC SOLITAIRE OPTIONS -->
+                    <div id="klondikeOptions">
+
+                        <label for="solDrawMode">
+                            Draw Mode
+                        </label>
+
+                        <select id="solDrawMode">
+
+                            <option value="1">
+                                Draw 1
+                            </option>
+
+                            <option value="3">
+                                Draw 3
+                            </option>
+
+                        </select>
+
                     </div>
 
-                    <div id="solTableau" class="sol-tableau"></div>
+                    <!-- SPIDER OPTIONS -->
+                    <div id="spiderOptions"
+                         class="hidden">
+
+                        <label for="solSpiderSuits">
+                            Spider Difficulty
+                        </label>
+
+                        <select id="solSpiderSuits">
+
+                            <option value="1">
+                                Easy • 1 Suit
+                            </option>
+
+                            <option value="2">
+                                Medium • 2 Suits
+                            </option>
+
+                            <option value="4">
+                                Hard • 4 Suits
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- BACKGROUND THEME -->
+                    <label for="solTheme">
+                        Background
+                    </label>
+
+                    <select id="solTheme">
+
+                        <option value="sakura">
+                            🌸 Sakura
+                        </option>
+
+                        <option value="green">
+                            🌿 Classic Green
+                        </option>
+
+                        <option value="midnight">
+                            🌙 Midnight
+                        </option>
+
+                    </select>
+
+                    <!-- CARD BACK -->
+                    <label for="solCardBack">
+                        Card Back
+                    </label>
+
+                    <select id="solCardBack">
+
+                        <option value="purple">
+                            💜 Purple
+                        </option>
+
+                        <option value="pink">
+                            🌷 Pink
+                        </option>
+
+                        <option value="blue">
+                            💙 Blue
+                        </option>
+
+                        <option value="classic">
+                            ♠ Classic
+                        </option>
+
+                    </select>
+
+                    <p class="cg-setting-note">
+                        Your customization and current game
+                        are saved automatically in this browser.
+                    </p>
+
+                </section>
+
+            </aside>
+
+            <!-- MAIN GAME AREA -->
+            <main class="cg-main">
+
+                <!-- TOOLBAR -->
+                <div class="cg-toolbar">
+
+                    <button id="solNew"
+                            type="button">
+                        ✨ New Game
+                    </button>
+
+                    <button id="solRestart"
+                            type="button">
+                        ↻ Restart
+                    </button>
+
+                    <button id="solUndo"
+                            type="button">
+                        ↶ Undo
+                    </button>
+
+                    <button id="solHint"
+                            type="button">
+                        💡 Hint
+                    </button>
+
+                    <button id="solHelp"
+                            type="button">
+                        ❔ How to Play
+                    </button>
+
                 </div>
-            </div>
-        </main>
-    </div>
-</div>
 
-<div id="solOverlay" class="sol-overlay">
-    <div class="sol-dialog">
-        <div class="sol-dialog-icon">🃏</div>
-        <h2 id="solDialogTitle">How to Play Solitaire</h2>
+                <!-- GAME MESSAGE -->
+                <div id="solMessage"
+                     class="cg-message"
+                     role="status"
+                     aria-live="polite">
 
-        <div id="solDialogText">
-            <p>Build four foundations from Ace to King,
-               keeping each suit together.</p>
-            <p>In the seven columns, stack cards in descending
-               order with alternating red and black colors.</p>
-            <p>Only Kings can move into empty columns.</p>
-            <p>Click or drag cards to move them.
-               Use Hint when you need help.</p>
-            <p>Move all 52 cards to the foundations to win!</p>
+                    Choose a game to begin!
+
+                </div>
+
+                <!-- CARD BOARD -->
+                <div class="cg-board-scroll">
+
+                    <div class="cg-board">
+
+                        <!-- TOP ROW -->
+                        <div id="solTopRow"
+                             class="cg-top-row">
+
+                            <!-- STOCK AND WASTE -->
+                            <div id="solStockArea"
+                                 class="cg-draw-area">
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Stock</span>
+
+                                    <div id="solStock"
+                                         class="sol-slot">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Waste</span>
+
+                                    <div id="solWaste"
+                                         class="sol-slot">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- FREECELL SPACES -->
+                            <div id="solFreecells"
+                                 class="cg-freecells hidden">
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Free 1</span>
+
+                                    <div class="sol-slot"
+                                         data-freecell="0">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Free 2</span>
+
+                                    <div class="sol-slot"
+                                         data-freecell="1">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Free 3</span>
+
+                                    <div class="sol-slot"
+                                         data-freecell="2">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Free 4</span>
+
+                                    <div class="sol-slot"
+                                         data-freecell="3">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- FOUNDATIONS -->
+                            <div id="solFoundations"
+                                 class="cg-foundations">
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Foundation</span>
+
+                                    <div class="sol-slot"
+                                         data-foundation="0">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Foundation</span>
+
+                                    <div class="sol-slot"
+                                         data-foundation="1">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Foundation</span>
+
+                                    <div class="sol-slot"
+                                         data-foundation="2">
+                                    </div>
+
+                                </div>
+
+                                <div class="cg-pile-wrap">
+
+                                    <span>Foundation</span>
+
+                                    <div class="sol-slot"
+                                         data-foundation="3">
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- SPIDER PROGRESS -->
+                        <div id="solSpiderInfo"
+                             class="cg-spider-info hidden">
+
+                            🕷️ Completed runs:
+
+                            <strong id="solSpiderCompleted">
+                                0
+                            </strong>
+
+                            / 8
+
+                            <span>
+                                Build King → Ace in the same suit.
+                            </span>
+
+                        </div>
+
+                        <!-- GAME COLUMNS -->
+                        <div id="solTableau"
+                             class="sol-tableau">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </main>
+
         </div>
 
-        <button type="button" id="solDialogButton">
-            Let's Play!
-        </button>
     </div>
-</div>
 
-<script src="Team8Sudoku/wwwroot/js/solitaire.js"></script>
+    <!-- HELP / WIN DIALOG -->
+    <div id="solOverlay"
+         class="sol-overlay hidden"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="solDialogTitle">
+
+        <div class="sol-dialog">
+
+            <div class="sol-dialog-icon">
+                🌸 🃏 🌸
+            </div>
+
+            <h2 id="solDialogTitle">
+                Card Games
+            </h2>
+
+            <div id="solDialogText">
+            </div>
+
+            <button type="button"
+                    id="solDialogButton">
+                Continue
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script src="/js/solitaire.js?v=30"></script>
+
 </body>
 </html>
+
