@@ -1,38 +1,69 @@
-# Team 8 Sudoku
+# 🎮 Game Hub — Final Project
 
-Team 8 is developing a simple Sudoku website focused on providing a clean and distraction-free Sudoku experience.
+### Team 8 | Software Engineering Project
 
-## Problem
+Game Hub is an interactive gaming website developed using ASP.NET Core Razor Pages, HTML, CSS, and JavaScript. It brings together Sudoku and classic card games in one platform with customizable themes and engaging gameplay.
 
-Many existing Sudoku applications contain advertisements and unnecessary features that distract users from the game.
+## 🎯 Games Included
 
-## Solution
+### 🧩 Sudoku
+- Interactive Sudoku puzzle
+- Multiple difficulty levels: Easy, Medium, and Hard
+- Hints, timer, and lives system
+- Level progression and scoring
+- Sakura-inspired design
 
-Our project provides a simple Sudoku interface focused only on playing Sudoku.
+### 🃏 Classic Solitaire
+- Traditional Klondike Solitaire gameplay
+- Card movement and game controls
+- Hints, undo, and restart options
 
-## Current Features
+### 🕷️ Spider Solitaire
+- Three difficulty options: 1 Suit, 2 Suits, and 4 Suits
+- Interactive card gameplay
+- Restart and undo features
 
-- 9x9 Sudoku board
-- Multiple Sudoku puzzles
-- Number input 1-9
-- Undo
-- Erase
-- Restart
-- New Game
-- Timer
-- Mistake counter
-- Incorrect answer highlighting
-- Mobile-friendly design
+### ♠️ FreeCell
+- Classic FreeCell gameplay
+- Strategic card movement
+- Game controls and customization
 
-## Technologies
+## 💻 Technologies Used
 
+- C#
 - ASP.NET Core Razor Pages
-- HTML
-- CSS
+- HTML5
+- CSS3
 - JavaScript
-- Visual Studio
-- GitHub
+- Visual Studio 2022
+- Git and GitHub
 
-## Current Version
+## ✨ Key Features
 
-v0.1
+- Multiple games in one website
+- Interactive user interface
+- Customizable game themes
+- Responsive design
+- Difficulty selection
+- Game progress and controls
+
+## 🚀 Getting Started
+
+1. Clone the repository.
+2. Open the solution in Visual Studio 2022.
+3. Restore the required .NET dependencies.
+4. Build and run the project.
+5. Select a game from the Game Hub homepage.
+
+## 👥 Development Team
+
+**Team 8 — Software Engineering Project**
+
+## 📌 Project Status
+
+Final Project — Completed
+
+## 📂 GitHub Repository
+
+https://github.com/nishma098/Team8Sudoku
+
